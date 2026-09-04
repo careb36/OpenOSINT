@@ -16,6 +16,7 @@ Canonical provider strings (used by POST /v1/keys and 422 messages):
   "virustotal"  — VirusTotal API key (search_virustotal)
   "censys"      — Censys credentials, stored as "api_id:api_secret" (search_censys)
 """
+
 from __future__ import annotations
 
 import os
@@ -34,10 +35,10 @@ class KeySource(str, Enum):
 
 
 class ToolKeyConfig(NamedTuple):
-    env_var: str | None      # platform env-var name; None when source is tenant/none
+    env_var: str | None  # platform env-var name; None when source is tenant/none
     source: KeySource
-    provider: str | None     # canonical tenant-facing provider string; None for platform/none tools
-    credit_cost: int = 1     # credits charged per successful call (see cloud/config.py for tuning)
+    provider: str | None  # canonical tenant-facing provider string; None for platform/none tools
+    credit_cost: int = 1  # credits charged per successful call (see cloud/config.py for tuning)
 
 
 # Single source of truth for v1 tool credentials.
@@ -47,16 +48,20 @@ TOOL_KEY_CONFIG: dict[str, ToolKeyConfig] = {
     # Platform pool — Shodan ToS requires attribution on every response, added
     # in cloud/tools.py dispatch() via the ATTRIBUTION map.
     # Cost is a single tunable constant in cloud/config.SHODAN_CREDIT_COST.
-    "search_shodan":      ToolKeyConfig("SHODAN_API_KEY",      KeySource.platform, provider=None, credit_cost=SHODAN_CREDIT_COST),
+    "search_shodan": ToolKeyConfig(
+        "SHODAN_API_KEY", KeySource.platform, provider=None, credit_cost=SHODAN_CREDIT_COST
+    ),
     # BYOK required — tenant must POST /v1/keys with the provider string below.
     # Never platform/tenant_optional: upstream ToS forbids a shared platform key.
-    "search_ip":          ToolKeyConfig("IPINFO_TOKEN",        KeySource.tenant,   provider="ipinfo"),
-    "search_abuseipdb":   ToolKeyConfig("ABUSEIPDB_API_KEY",   KeySource.tenant,   provider="abuseipdb"),
-    "search_virustotal":  ToolKeyConfig("VIRUSTOTAL_API_KEY",  KeySource.tenant,   provider="virustotal"),
-    "search_censys":      ToolKeyConfig(None,                  KeySource.tenant,   provider="censys"),
+    "search_ip": ToolKeyConfig("IPINFO_TOKEN", KeySource.tenant, provider="ipinfo"),
+    "search_abuseipdb": ToolKeyConfig("ABUSEIPDB_API_KEY", KeySource.tenant, provider="abuseipdb"),
+    "search_virustotal": ToolKeyConfig(
+        "VIRUSTOTAL_API_KEY", KeySource.tenant, provider="virustotal"
+    ),
+    "search_censys": ToolKeyConfig(None, KeySource.tenant, provider="censys"),
     # No credential required.
-    "search_dns":         ToolKeyConfig(None,                  KeySource.none,     provider=None),
-    "search_domain":      ToolKeyConfig(None,                  KeySource.none,     provider=None),
+    "search_dns": ToolKeyConfig(None, KeySource.none, provider=None),
+    "search_domain": ToolKeyConfig(None, KeySource.none, provider=None),
 }
 
 

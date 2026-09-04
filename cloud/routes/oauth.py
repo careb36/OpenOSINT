@@ -7,6 +7,7 @@ X-API-Key auth (cloud/auth.py) and MCP bearer auth (cloud/routes/mcp_gateway.py)
 are untouched by this file. No checkout/linking logic here — see the
 customer-key rendezvous added in a later commit.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request

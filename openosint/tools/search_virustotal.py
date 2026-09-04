@@ -263,7 +263,9 @@ def _lookup_hash(api_key: str, file_hash: str, timeout: int) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def run_virustotal_osint(target: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None) -> str:
+async def run_virustotal_osint(
+    target: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None
+) -> str:
     """
     Check *target* against VirusTotal's 70+ antivirus engines.
 

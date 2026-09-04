@@ -43,6 +43,8 @@ def _gdelt_proxies() -> dict[str, str] | None:
     if os.environ.get(_GDELT_PROXY_OPT_IN_ENV_VAR, "").strip().lower() in ("1", "true", "yes"):
         return get_requests_proxies()
     return None
+
+
 _MIN_TIMESPAN = 15
 _MAX_TIMESPAN = 1440
 _DEFAULT_TIMESPAN = 60
@@ -192,10 +194,7 @@ def _format_gdelt_results(feature_collection: dict, query: str, timespan: int) -
     if not features:
         return f"No geolocated coverage found for '{query}' in the last {timespan} minute(s)."
 
-    lines = [
-        f"GDELT geo results for '{query}' (last {timespan}min): "
-        f"{len(features)} location(s)\n"
-    ]
+    lines = [f"GDELT geo results for '{query}' (last {timespan}min): {len(features)} location(s)\n"]
     for feat in features[:_SAMPLE_LINES]:
         props = feat.get("properties") or {}
         coords = (feat.get("geometry") or {}).get("coordinates") or [None, None]

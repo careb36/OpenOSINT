@@ -84,7 +84,9 @@ def _format_results(data: dict) -> str:
     return "\n".join(lines)
 
 
-async def run_abuseipdb_osint(ip: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None) -> str:
+async def run_abuseipdb_osint(
+    ip: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None
+) -> str:
     """Check an IP against the AbuseIPDB v2 API. Requires ABUSEIPDB_API_KEY."""
     resolved_key = api_key or os.environ.get("ABUSEIPDB_API_KEY", "")
     if not resolved_key:

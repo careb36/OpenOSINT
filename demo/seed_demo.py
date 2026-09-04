@@ -71,49 +71,77 @@ def cmd_seed() -> None:
 
     def statements(entity_id: str, dataset: str, props: list[tuple[str, str]]) -> list[Statement]:
         return [
-            Statement(entity_id=entity_id, prop=prop, schema="Organization", value=value,
-                      dataset=dataset, first_seen=iso, last_seen=iso)
+            Statement(
+                entity_id=entity_id,
+                prop=prop,
+                schema="Organization",
+                value=value,
+                dataset=dataset,
+                first_seen=iso,
+                last_seen=iso,
+            )
             for prop, value in props
         ]
 
-    stmts_a = statements(ORG_A_ID, "openosint:github",
-                         [("name", "Aurora Dynamics Research"),
-                          ("website", "https://aurora-dynamics.example")])
-    stmts_b = statements(ORG_B_ID, "openosint:whois",
-                         [("name", "Aurora Dynamics Research B.V."),
-                          ("email", "registry@aurora-dynamics.example"),
-                          ("website", "https://aurora-dynamics.example")])
+    stmts_a = statements(
+        ORG_A_ID,
+        "openosint:github",
+        [("name", "Aurora Dynamics Research"), ("website", "https://aurora-dynamics.example")],
+    )
+    stmts_b = statements(
+        ORG_B_ID,
+        "openosint:whois",
+        [
+            ("name", "Aurora Dynamics Research B.V."),
+            ("email", "registry@aurora-dynamics.example"),
+            ("website", "https://aurora-dynamics.example"),
+        ],
+    )
     provenance = [
-        make_provenance(statement_id=s.id, run_id=RUN_GITHUB,
-                        collection_method="map_github:company",
-                        extractor_confidence=0.70, collected_at=COLLECTED_AT)
+        make_provenance(
+            statement_id=s.id,
+            run_id=RUN_GITHUB,
+            collection_method="map_github:company",
+            extractor_confidence=0.70,
+            collected_at=COLLECTED_AT,
+        )
         for s in stmts_a
     ] + [
-        make_provenance(statement_id=s.id, run_id=RUN_WHOIS,
-                        # The website is the queried domain itself; the rest
-                        # comes off the registrant record.
-                        collection_method=("map_whois:domain" if s.prop == "website"
-                                           else "map_whois:name_org"),
-                        extractor_confidence=0.80, collected_at=COLLECTED_AT)
+        make_provenance(
+            statement_id=s.id,
+            run_id=RUN_WHOIS,
+            # The website is the queried domain itself; the rest
+            # comes off the registrant record.
+            collection_method=("map_whois:domain" if s.prop == "website" else "map_whois:name_org"),
+            extractor_confidence=0.80,
+            collected_at=COLLECTED_AT,
+        )
         for s in stmts_b
     ]
     with GraphStore(DB_PATH) as store:
-        store.append(EmissionResult(statements=tuple(stmts_a + stmts_b),
-                                    provenance=tuple(provenance), bridge_links=()))
+        store.append(
+            EmissionResult(
+                statements=tuple(stmts_a + stmts_b), provenance=tuple(provenance), bridge_links=()
+            )
+        )
 
 
 def cmd_entities() -> None:
-    print(f"{BOLD}Graph store — 2 entities from 2 independent runs{RESET} "
-          f"{DIM}(synthetic demo data){RESET}\n")
+    print(
+        f"{BOLD}Graph store — 2 entities from 2 independent runs{RESET} "
+        f"{DIM}(synthetic demo data){RESET}\n"
+    )
     with open_store() as store:
         for entity_id in (ORG_A_ID, ORG_B_ID):
             stmts = store.get_statements_by_entity(entity_id)
             name = next(s.value for s in stmts if s.prop == "name")
             prov = store.get_provenance(stmts[0].id)[0]
             print(f"  {CYAN}Organization {short(entity_id)}{RESET}  {BOLD}“{name}”{RESET}")
-            print(f"    {DIM}dataset={RESET}{YELLOW}{stmts[0].dataset}{RESET}"
-                  f"  {DIM}run={prov.run_id}  {prov.collection_method}"
-                  f"  conf={prov.extractor_confidence:.2f}{RESET}")
+            print(
+                f"    {DIM}dataset={RESET}{YELLOW}{stmts[0].dataset}{RESET}"
+                f"  {DIM}run={prov.run_id}  {prov.collection_method}"
+                f"  conf={prov.extractor_confidence:.2f}{RESET}"
+            )
             for s in stmts:
                 if s.prop != "name":
                     print(f"    {DIM}{s.prop}: {s.value}{RESET}")
@@ -129,19 +157,25 @@ def cmd_crossref() -> None:
     algo = algorithm_identity(LogicV2)
     with open_store() as store:
         candidates = run_crossref(store, run_id=RUN_CROSSREF, decided_at=COLLECTED_AT)
-        print(f"{BOLD}run_crossref{RESET} — scored all same-schema pairs "
-              f"{DIM}({algo['name']}, nomenklatura {algo['version']}){RESET}\n")
+        print(
+            f"{BOLD}run_crossref{RESET} — scored all same-schema pairs "
+            f"{DIM}({algo['name']}, nomenklatura {algo['version']}){RESET}\n"
+        )
         for cand in candidates:
-            print(f"  {MAGENTA}same_as candidate{RESET}  "
-                  f"{short(cand.entity_id_a)} ≈ {short(cand.entity_id_b)}"
-                  f"   {BOLD}score {cand.score:.3f}{RESET}")
+            print(
+                f"  {MAGENTA}same_as candidate{RESET}  "
+                f"{short(cand.entity_id_a)} ≈ {short(cand.entity_id_b)}"
+                f"   {BOLD}score {cand.score:.3f}{RESET}"
+            )
             feature = cand.explanation["name_match"]
             print(f"    name_match: {DIM}'{feature['query']}' vs '{feature['candidate']}'{RESET}")
             for chunk in str(feature["detail"]).replace("] [", "]\n[").splitlines():
                 for line in textwrap.wrap(chunk, width=76):
                     print(f"      {DIM}{line}{RESET}")
-        print(f"\n  → {YELLOW}judgement='unsure'{RESET} recorded — "
-              f"{BOLD}auto-merge is forbidden{RESET}; a human decides.")
+        print(
+            f"\n  → {YELLOW}judgement='unsure'{RESET} recorded — "
+            f"{BOLD}auto-merge is forbidden{RESET}; a human decides."
+        )
 
 
 def cmd_review() -> None:
@@ -149,17 +183,23 @@ def cmd_review() -> None:
 
     with open_store() as store:
         pending = list_review_candidates(store)
-        print(f"{BOLD}Human review queue{RESET} — {len(pending)} pending candidate(s), "
-              f"{YELLOW}judgement='unsure'{RESET}\n")
+        print(
+            f"{BOLD}Human review queue{RESET} — {len(pending)} pending candidate(s), "
+            f"{YELLOW}judgement='unsure'{RESET}\n"
+        )
         for cand in pending:
             score = f"{cand.score:.3f}" if cand.score is not None else "?"
             print(f"  [{cand.resolution_id}] {cand.schema}  score {score}")
-            for entity_id, props in ((cand.entity_id_a, cand.entity_a_properties),
-                                     (cand.entity_id_b, cand.entity_b_properties)):
+            for entity_id, props in (
+                (cand.entity_id_a, cand.entity_a_properties),
+                (cand.entity_id_b, cand.entity_b_properties),
+            ):
                 dataset = store.get_statements_by_entity(entity_id)[0].dataset
                 print(f"    {short(entity_id)}  “{props['name'][0]}”  {DIM}({dataset}){RESET}")
-        print(f"\n  canonical_for({short(ORG_A_ID)})={short(store.canonical_for(ORG_A_ID))}"
-              f"   canonical_for({short(ORG_B_ID)})={short(store.canonical_for(ORG_B_ID))}")
+        print(
+            f"\n  canonical_for({short(ORG_A_ID)})={short(store.canonical_for(ORG_A_ID))}"
+            f"   canonical_for({short(ORG_B_ID)})={short(store.canonical_for(ORG_B_ID))}"
+        )
         print(f"  → still two separate entities. {BOLD}NOTHING auto-merged.{RESET}")
 
 
@@ -167,13 +207,22 @@ def cmd_accept() -> None:
     from openosint.graph.review import decide_review_candidate
 
     with open_store() as store:
-        decide_review_candidate(store, entity_id=ORG_A_ID, canonical_id=ORG_B_ID,
-                                judgement="positive", decided_at=COLLECTED_AT,
-                                reviewer_id=REVIEWER)
-        print(f"{BOLD}Recorded human accept{RESET} — judgement='positive' "
-              f"{DIM}(by=human, reviewer={REVIEWER}){RESET}\n")
-        print(f"  canonical_for({short(ORG_A_ID)})={short(store.canonical_for(ORG_A_ID))}"
-              f"   canonical_for({short(ORG_B_ID)})={short(store.canonical_for(ORG_B_ID))}")
+        decide_review_candidate(
+            store,
+            entity_id=ORG_A_ID,
+            canonical_id=ORG_B_ID,
+            judgement="positive",
+            decided_at=COLLECTED_AT,
+            reviewer_id=REVIEWER,
+        )
+        print(
+            f"{BOLD}Recorded human accept{RESET} — judgement='positive' "
+            f"{DIM}(by=human, reviewer={REVIEWER}){RESET}\n"
+        )
+        print(
+            f"  canonical_for({short(ORG_A_ID)})={short(store.canonical_for(ORG_A_ID))}"
+            f"   canonical_for({short(ORG_B_ID)})={short(store.canonical_for(ORG_B_ID))}"
+        )
         print(f"  → {GREEN}{BOLD}one canonical entity ✓{RESET}")
 
 

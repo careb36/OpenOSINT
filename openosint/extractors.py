@@ -57,27 +57,21 @@ def _extract_github(raw: str, seed: Entity) -> tuple[list[Entity], list[Relation
             if email and _EMAIL_RE.fullmatch(email):
                 e = make_entity(EntityType.EMAIL, email, 0.95, "search_github")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "profile_email", "search_github", 0.95)
-                )
+                relationships.append(Relationship(seed, e, "profile_email", "search_github", 0.95))
         elif line.startswith("[GitHub] Company:"):
             _, _, company = line.partition("[GitHub] Company:")
             company = company.strip().lstrip("@")
             if company and company.lower() not in ("none", "n/a", ""):
                 e = make_entity(EntityType.ORG, company, 0.7, "search_github")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "member_of", "search_github", 0.7)
-                )
+                relationships.append(Relationship(seed, e, "member_of", "search_github", 0.7))
         elif line.startswith("[GitHub] Profile URL:"):
             _, _, url = line.partition("[GitHub] Profile URL:")
             url = url.strip()
             if url.startswith("http"):
                 e = make_entity(EntityType.URL, url, 0.95, "search_github")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "account_on", "search_github", 0.95)
-                )
+                relationships.append(Relationship(seed, e, "account_on", "search_github", 0.95))
 
     return entities, relationships
 
@@ -98,9 +92,7 @@ def _extract_breach(raw: str, seed: Entity) -> tuple[list[Entity], list[Relation
             breach_name = m.group(1)
             e = make_entity(EntityType.ORG, breach_name, 0.9, "search_breach")
             entities.append(e)
-            relationships.append(
-                Relationship(seed, e, "found_in_breach", "search_breach", 0.9)
-            )
+            relationships.append(Relationship(seed, e, "found_in_breach", "search_breach", 0.9))
 
     return entities, relationships
 
@@ -123,9 +115,7 @@ def _extract_dns(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationshi
                 if _IPV4_RE.fullmatch(ip):
                     e = make_entity(EntityType.IP, ip, 0.95, "search_dns")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "resolves_to", "search_dns", 0.95)
-                    )
+                    relationships.append(Relationship(seed, e, "resolves_to", "search_dns", 0.95))
 
         elif stripped.startswith("[DNS] NS:"):
             _, _, rest = stripped.partition("[DNS] NS:")
@@ -134,9 +124,7 @@ def _extract_dns(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationshi
                 if ns and "." in ns:
                     e = make_entity(EntityType.DOMAIN, ns, 0.9, "search_dns")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "nameserver", "search_dns", 0.9)
-                    )
+                    relationships.append(Relationship(seed, e, "nameserver", "search_dns", 0.9))
 
         elif stripped.startswith("[DNS] CNAME:"):
             _, _, rest = stripped.partition("[DNS] CNAME:")
@@ -145,9 +133,7 @@ def _extract_dns(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationshi
                 if cname and "." in cname:
                     e = make_entity(EntityType.DOMAIN, cname, 0.85, "search_dns")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "cname_to", "search_dns", 0.85)
-                    )
+                    relationships.append(Relationship(seed, e, "cname_to", "search_dns", 0.85))
 
         elif stripped.startswith("• "):
             # MX record bullet: • 10 mail.example.com
@@ -157,9 +143,7 @@ def _extract_dns(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationshi
                 if "." in mx_host:
                     e = make_entity(EntityType.DOMAIN, mx_host, 0.9, "search_dns")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "mx_host", "search_dns", 0.9)
-                    )
+                    relationships.append(Relationship(seed, e, "mx_host", "search_dns", 0.9))
 
     return entities, relationships
 
@@ -192,9 +176,7 @@ def _extract_whois(raw: str, seed: Entity) -> tuple[list[Entity], list[Relations
             if org and org.lower() not in ("none", "n/a", ""):
                 e = make_entity(EntityType.ORG, org, 0.8, "search_whois")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "registrant_org", "search_whois", 0.8)
-                )
+                relationships.append(Relationship(seed, e, "registrant_org", "search_whois", 0.8))
 
         elif stripped.startswith("[+] Name Servers:"):
             _, _, rest = stripped.partition("[+] Name Servers:")
@@ -203,9 +185,7 @@ def _extract_whois(raw: str, seed: Entity) -> tuple[list[Entity], list[Relations
                 if ns and "." in ns:
                     e = make_entity(EntityType.DOMAIN, ns, 0.85, "search_whois")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "nameserver", "search_whois", 0.85)
-                    )
+                    relationships.append(Relationship(seed, e, "nameserver", "search_whois", 0.85))
 
     return entities, relationships
 
@@ -226,9 +206,7 @@ def _extract_username(raw: str, seed: Entity) -> tuple[list[Entity], list[Relati
             url = m.group(1).rstrip(".,;")
             e = make_entity(EntityType.URL, url, 0.8, "search_username")
             entities.append(e)
-            relationships.append(
-                Relationship(seed, e, "account_on", "search_username", 0.8)
-            )
+            relationships.append(Relationship(seed, e, "account_on", "search_username", 0.8))
 
     return entities, relationships
 
@@ -255,9 +233,7 @@ def _extract_email(raw: str, seed: Entity) -> tuple[list[Entity], list[Relations
             url = f"https://{host}"
             e = make_entity(EntityType.URL, url, 0.75, "search_email")
             entities.append(e)
-            relationships.append(
-                Relationship(seed, e, "registered_at", "search_email", 0.75)
-            )
+            relationships.append(Relationship(seed, e, "registered_at", "search_email", 0.75))
 
     return entities, relationships
 
@@ -277,9 +253,7 @@ def _extract_domain(raw: str, seed: Entity) -> tuple[list[Entity], list[Relation
             if "." in sub and not sub.startswith("http"):
                 e = make_entity(EntityType.DOMAIN, sub, 0.85, "search_domain")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "subdomain_of", "search_domain", 0.85)
-                )
+                relationships.append(Relationship(seed, e, "subdomain_of", "search_domain", 0.85))
 
     return entities, relationships
 
@@ -303,14 +277,10 @@ def _extract_ip(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationship
                 if org_name:
                     e = make_entity(EntityType.ORG, org_name, 0.75, "search_ip")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "hosted_at", "search_ip", 0.75)
-                    )
+                    relationships.append(Relationship(seed, e, "hosted_at", "search_ip", 0.75))
                 asn_m = _ASN_RE.search(org)
                 if asn_m:
-                    e_asn = make_entity(
-                        EntityType.ASN, f"AS{asn_m.group(1)}", 0.9, "search_ip"
-                    )
+                    e_asn = make_entity(EntityType.ASN, f"AS{asn_m.group(1)}", 0.9, "search_ip")
                     entities.append(e_asn)
                     relationships.append(
                         Relationship(seed, e_asn, "belongs_to_asn", "search_ip", 0.9)
@@ -322,9 +292,7 @@ def _extract_ip(raw: str, seed: Entity) -> tuple[list[Entity], list[Relationship
             if hostname and "." in hostname:
                 e = make_entity(EntityType.DOMAIN, hostname, 0.8, "search_ip")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "reverse_dns", "search_ip", 0.8)
-                )
+                relationships.append(Relationship(seed, e, "reverse_dns", "search_ip", 0.8))
 
     return entities, relationships
 
@@ -346,9 +314,7 @@ def _extract_shodan(raw: str, seed: Entity) -> tuple[list[Entity], list[Relation
             if org and org.lower() not in ("none", ""):
                 e = make_entity(EntityType.ORG, org, 0.8, "search_shodan")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "hosted_at", "search_shodan", 0.8)
-                )
+                relationships.append(Relationship(seed, e, "hosted_at", "search_shodan", 0.8))
 
         elif stripped.startswith("[+] Hostnames:"):
             _, _, rest = stripped.partition("[+] Hostnames:")
@@ -357,9 +323,7 @@ def _extract_shodan(raw: str, seed: Entity) -> tuple[list[Entity], list[Relation
                 if hostname and "." in hostname:
                     e = make_entity(EntityType.DOMAIN, hostname, 0.8, "search_shodan")
                     entities.append(e)
-                    relationships.append(
-                        Relationship(seed, e, "hostname", "search_shodan", 0.8)
-                    )
+                    relationships.append(Relationship(seed, e, "hostname", "search_shodan", 0.8))
 
     return entities, relationships
 
@@ -391,9 +355,7 @@ def _extract_ip2location(raw: str, seed: Entity) -> tuple[list[Entity], list[Rel
             if isp and isp.lower() not in ("none", ""):
                 e = make_entity(EntityType.ORG, isp, 0.75, "search_ip2location")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "hosted_at", "search_ip2location", 0.75)
-                )
+                relationships.append(Relationship(seed, e, "hosted_at", "search_ip2location", 0.75))
 
     return entities, relationships
 
@@ -448,9 +410,7 @@ def _extract_abuseipdb(raw: str, seed: Entity) -> tuple[list[Entity], list[Relat
             if isp and isp.lower() not in ("none", ""):
                 e = make_entity(EntityType.ORG, isp, 0.7, "search_abuseipdb")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "hosted_at", "search_abuseipdb", 0.7)
-                )
+                relationships.append(Relationship(seed, e, "hosted_at", "search_abuseipdb", 0.7))
 
     return entities, relationships
 
@@ -485,9 +445,7 @@ def _extract_footprint(raw: str, seed: Entity) -> tuple[list[Entity], list[Relat
                 seen_domains.add(domain)
                 e = make_entity(EntityType.DOMAIN, domain, 0.7, "search_footprint")
                 entities.append(e)
-                relationships.append(
-                    Relationship(seed, e, "footprint_on", "search_footprint", 0.7)
-                )
+                relationships.append(Relationship(seed, e, "footprint_on", "search_footprint", 0.7))
 
     return entities, relationships
 

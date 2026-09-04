@@ -4,6 +4,7 @@ Separate from cloud/auth.py (X-API-Key → Customer) on purpose: this is the
 web-dashboard login identity, not the tool-call credential. Session holds
 only `user_id` — never an api_key.
 """
+
 from __future__ import annotations
 
 from fastapi import HTTPException, Request

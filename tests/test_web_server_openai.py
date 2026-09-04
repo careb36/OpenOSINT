@@ -692,7 +692,9 @@ class TestProbeOpenaiEndpoint:
 
         with patch("openosint.web_server._httpx", None):
             with patch("openosint.web_server._requests") as mreq:
-                mreq.get.return_value = _mock_requests_response(status_code=401, body={"error": "bad key"})
+                mreq.get.return_value = _mock_requests_response(
+                    status_code=401, body={"error": "bad key"}
+                )
                 result = await _probe_openai_endpoint("http://localhost:4000/v1", "sk-stale")
 
         assert result["reachable"] is True

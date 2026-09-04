@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import dns.exception
 import dns.resolver
-import pytest
 
 from openosint.tools.search_dns import run_dns_osint
 
@@ -64,7 +63,9 @@ async def test_standard_domain_has_a_mx_ns() -> None:
         ("example.com", "MX"): ["10 mail.example.com."],
         ("example.com", "NS"): ["ns1.example.com.", "ns2.example.com."],
         ("example.com", "TXT"): ['"v=spf1 include:_spf.example.com -all"'],
-        ("example.com", "SOA"): ["ns1.example.com. admin.example.com. 2024010101 3600 900 604800 300"],
+        ("example.com", "SOA"): [
+            "ns1.example.com. admin.example.com. 2024010101 3600 900 604800 300"
+        ],
         ("_dmarc.example.com", "TXT"): ['"v=DMARC1; p=reject; rua=mailto:dmarc@example.com"'],
     }
 

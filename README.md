@@ -604,6 +604,12 @@ Don't want to install these locally? The [OpenOSINT Email Recon Actor](https://a
 | `shodan` | Shodan API client | `pip install shodan` |
 | `reportlab` | PDF report export | `pip install reportlab` |
 | `censys` | Censys API client | `pip install censys` |
+| `stix` | STIX 2.1 exporter (`to_stix_bundle`) | `pip install "openosint[stix]"` |
+
+`openosint[stix]` also installs `followthemoney` (import chain via
+`openosint.graph.__init__`), which can pull `PyICU`. In Docker/Linux images,
+install `pkg-config` and `libicu-dev` before pip install, or the build may fail
+with: `Please install pkg-config on your system or set the ICU_VERSION environment variable`.
 
 ## Configuration
 

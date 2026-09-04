@@ -16,6 +16,7 @@ Coverage:
   (i) upstream error leaves credits unchanged
   (j) allow-list is exactly the 5 infrastructure tools; removed tools return 400
 """
+
 from __future__ import annotations
 
 import os
@@ -26,6 +27,7 @@ from httpx import ASGITransport, AsyncClient
 
 from cloud import db, keys
 from cloud.main import create_app
+from cloud.tools import ALLOW_LIST as _ALLOW_LIST
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
 
@@ -458,11 +460,14 @@ async def test_platform_pool_upstream_error_charges_zero_credits(client):
 
 # ── (j) allow-list shape and removed-tool 400s ───────────────────────────────
 
-from cloud.tools import ALLOW_LIST as _ALLOW_LIST
-
 _EXPECTED_TOOLS = {
-    "search_ip", "search_ip2location", "search_abuseipdb", "search_dns", "search_domain",
-    "search_virustotal", "search_censys",
+    "search_ip",
+    "search_ip2location",
+    "search_abuseipdb",
+    "search_dns",
+    "search_domain",
+    "search_virustotal",
+    "search_censys",
 }
 
 
@@ -513,7 +518,9 @@ async def test_dispatch_appends_shodan_attribution():
     # test_shodan_costs_configured_credit_amount) — reinject it so dispatch()
     # still runs the real attribution-appending path.
     with patch.dict("cloud.tools.ALLOW_LIST", {"search_shodan": cloud_tools._SHODAN_ENTRY}):
-        with patch("cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")):
+        with patch(
+            "cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")
+        ):
             result = await cloud_tools.dispatch("search_shodan", "1.2.3.4", api_key="k")
 
     assert result["results"][-1] == "Data provided by Shodan (shodan.io)."
@@ -539,7 +546,9 @@ async def test_shodan_attribution_reaches_rest_response_body(client):
     # search_shodan is deliberately absent from ALLOW_LIST — reinject it (see
     # test_shodan_costs_configured_credit_amount).
     with patch.dict("cloud.tools.ALLOW_LIST", {"search_shodan": _SHODAN_ENTRY}):
-        with patch("cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")):
+        with patch(
+            "cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")
+        ):
             with patch.dict(os.environ, {"SHODAN_API_KEY": "srv_shodan_key"}):
                 resp = await client.post(
                     "/v1/enrich",

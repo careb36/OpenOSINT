@@ -16,6 +16,7 @@ under an old key keep working until they're naturally rewritten (each
 store_key() call re-encrypts under the new primary). Drop the old key
 from the list only once nothing is left encrypted under it.
 """
+
 from __future__ import annotations
 
 import os
@@ -39,8 +40,8 @@ def _get_fernet() -> MultiFernet:
         if os.environ.get("DATABASE_URL", ""):
             raise RuntimeError(
                 "CONFIG_ENCRYPTION_KEY is required when DATABASE_URL is set. "
-                "Generate: python -c \"from cryptography.fernet import Fernet; "
-                "print(Fernet.generate_key().decode())\""
+                'Generate: python -c "from cryptography.fernet import Fernet; '
+                'print(Fernet.generate_key().decode())"'
             )
         # In-memory / test mode — ephemeral key, never persisted
         raw_key = Fernet.generate_key().decode()

@@ -72,7 +72,9 @@ class TestClientBackendDisabledByDefault:
         )
         assert resp.status_code == 403
 
-    async def test_openai_base_url_in_test_endpoint_rejected_without_flag(self, client, monkeypatch):
+    async def test_openai_base_url_in_test_endpoint_rejected_without_flag(
+        self, client, monkeypatch
+    ):
         monkeypatch.delenv("OPENOSINT_ALLOW_CLIENT_BACKEND", raising=False)
 
         resp = await client.post(
@@ -439,7 +441,10 @@ class TestRedirectsDisabled:
                 mreq.post.return_value = _mock_requests_response(body=body)
                 events = []
                 async for e in _stream_openai(
-                    [{"role": "user", "content": "hi"}], "http://localhost:4000/v1", "", "gpt-4o-mini"
+                    [{"role": "user", "content": "hi"}],
+                    "http://localhost:4000/v1",
+                    "",
+                    "gpt-4o-mini",
                 ):
                     events.append(e)
 

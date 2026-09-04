@@ -24,6 +24,7 @@ from typing import Any
 
 import anthropic
 
+from openosint.pivot import investigate_graph_for_agent
 from openosint.tools.generate_dorks import run_dork_osint
 from openosint.tools.scrape_url import run_scrape_url_osint
 from openosint.tools.search_abuseipdb import run_abuseipdb_osint
@@ -33,6 +34,7 @@ from openosint.tools.search_dns import run_dns_osint
 from openosint.tools.search_domain import run_domain_osint
 from openosint.tools.search_dorks_live import run_dorks_live_osint
 from openosint.tools.search_email import run_email_osint
+from openosint.tools.search_footprint import run_footprint_osint
 from openosint.tools.search_gdelt_geo import run_gdelt_geo_osint, split_geojson_fence
 from openosint.tools.search_github import run_github_osint
 from openosint.tools.search_ip import run_ip_osint
@@ -43,8 +45,6 @@ from openosint.tools.search_shodan import run_shodan_osint
 from openosint.tools.search_username import run_username_osint
 from openosint.tools.search_virustotal import run_virustotal_osint
 from openosint.tools.search_whois import run_whois_osint
-from openosint.tools.search_footprint import run_footprint_osint
-from openosint.pivot import investigate_graph_for_agent
 
 logger = logging.getLogger(__name__)
 

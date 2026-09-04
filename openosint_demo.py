@@ -4,6 +4,7 @@ openosint_demo.py — VHS demo driver for OpenOSINT v2.18.0.
 Produces Rich-formatted terminal output for each demo scene.
 Driven by openosint.tape via stdin injection.
 """
+
 import sys
 import time
 
@@ -16,20 +17,20 @@ from rich.table import Table
 console = Console(highlight=False)
 
 _TOOLS: list[tuple[str, str, str, bool]] = [
-    ("generate_dorks",     "built-in",        "Google dork URL generator",               True),
-    ("search_email",       "holehe",           "Social accounts linked to an email",      True),
-    ("search_username",    "sherlock",         "Accounts across 300+ platforms",          True),
-    ("search_breach",      "HaveIBeenPwned",   "Data breach exposure",                    True),
-    ("search_whois",       "python-whois",     "Domain registrant info",                  True),
-    ("search_ip",          "ipinfo.io",        "Geolocation, ASN, hostname",              True),
-    ("search_domain",      "sublist3r",        "Subdomain enumeration",                   True),
-    ("search_paste",       "psbdmp.ws",        "Pastebin dump mentions",                  True),
-    ("search_phone",       "phoneinfoga",      "Carrier, country, line type",             True),
-    ("search_shodan",      "Shodan API",       "Open ports, banners, CVEs",               True),
-    ("search_virustotal",  "VirusTotal API",   "Malware intel — 70+ AV engines",          True),
-    ("search_censys",      "Censys API",       "Certificates, ports, infrastructure",     True),
-    ("search_ip2location", "IP2Location.io",   "Geoloc + VPN/Proxy/Tor  (sponsored)",    True),
-    ("search_abuseipdb",   "AbuseIPDB API",    "Abuse reputation, confidence score",      True),
+    ("generate_dorks", "built-in", "Google dork URL generator", True),
+    ("search_email", "holehe", "Social accounts linked to an email", True),
+    ("search_username", "sherlock", "Accounts across 300+ platforms", True),
+    ("search_breach", "HaveIBeenPwned", "Data breach exposure", True),
+    ("search_whois", "python-whois", "Domain registrant info", True),
+    ("search_ip", "ipinfo.io", "Geolocation, ASN, hostname", True),
+    ("search_domain", "sublist3r", "Subdomain enumeration", True),
+    ("search_paste", "psbdmp.ws", "Pastebin dump mentions", True),
+    ("search_phone", "phoneinfoga", "Carrier, country, line type", True),
+    ("search_shodan", "Shodan API", "Open ports, banners, CVEs", True),
+    ("search_virustotal", "VirusTotal API", "Malware intel — 70+ AV engines", True),
+    ("search_censys", "Censys API", "Certificates, ports, infrastructure", True),
+    ("search_ip2location", "IP2Location.io", "Geoloc + VPN/Proxy/Tor  (sponsored)", True),
+    ("search_abuseipdb", "AbuseIPDB API", "Abuse reputation, confidence score", True),
 ]
 
 
@@ -44,8 +45,7 @@ def _banner() -> None:
         )
     )
     console.print(
-        "  Type a target or question. [dim]'help'[/] for commands."
-        " [dim]'exit'[/] to quit.\n"
+        "  Type a target or question. [dim]'help'[/] for commands. [dim]'exit'[/] to quit.\n"
     )
 
 
@@ -57,10 +57,10 @@ def _tools_table() -> None:
         show_header=True,
         padding=(0, 1),
     )
-    tbl.add_column("Tool",   style="#f1f5f9", no_wrap=True)
-    tbl.add_column("Method", style="dim",     no_wrap=True)
-    tbl.add_column("Finds",  style="#94a3b8")
-    tbl.add_column("",       style="",        no_wrap=True, justify="right")
+    tbl.add_column("Tool", style="#f1f5f9", no_wrap=True)
+    tbl.add_column("Method", style="dim", no_wrap=True)
+    tbl.add_column("Finds", style="#94a3b8")
+    tbl.add_column("", style="", no_wrap=True, justify="right")
     for name, method, finds, ready in _TOOLS:
         status = "[bold green]✓[/]" if ready else "[red]✗[/]"
         tbl.add_row(name, method, finds, status)
@@ -87,11 +87,17 @@ def _scene_investigate() -> None:
     console.print("  [dim]Thinking...[/]")
     time.sleep(0.5)
 
-    _dispatch("generate_dorks",  "target='target@example.com'", "12 dork URLs generated")
-    _dispatch("search_email",    "email='target@example.com'",  "Found: Spotify, WordPress, Gravatar, Office365")
-    _dispatch("search_breach",   "email='target@example.com'",  "2 breaches: LinkedIn (2016), Adobe (2013)")
-    _dispatch("search_username", "username='targetuser'",       "12 accounts found across platforms")
-    _dispatch("search_paste",    "query='target@example.com'",  "3 paste references found")
+    _dispatch("generate_dorks", "target='target@example.com'", "12 dork URLs generated")
+    _dispatch(
+        "search_email",
+        "email='target@example.com'",
+        "Found: Spotify, WordPress, Gravatar, Office365",
+    )
+    _dispatch(
+        "search_breach", "email='target@example.com'", "2 breaches: LinkedIn (2016), Adobe (2013)"
+    )
+    _dispatch("search_username", "username='targetuser'", "12 accounts found across platforms")
+    _dispatch("search_paste", "query='target@example.com'", "3 paste references found")
 
     report = """\
 ## Summary
@@ -231,9 +237,7 @@ def main() -> None:
             break
         if "investigate" in cmd.lower() or "target@example.com" in cmd:
             _scene_investigate()
-        elif "198.51.100.1" in cmd or (
-            "abuse" in cmd.lower() and "location" in cmd.lower()
-        ):
+        elif "198.51.100.1" in cmd or ("abuse" in cmd.lower() and "location" in cmd.lower()):
             _scene_ip_check()
         else:
             console.print(f"  [dim]Running investigation for: {cmd}[/]")
