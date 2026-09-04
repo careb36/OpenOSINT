@@ -11,8 +11,36 @@ Coverage:
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
+
+# Captured before any test patches shutil.which, so the stand-in below can
+# still delegate for binaries it does not care about.
+_REAL_WHICH = shutil.which
+
+
+def _which_with_osint_binaries_installed(name: str) -> str | None:
+    """
+    Stand-in for `shutil.which` reporting the runner's gated binaries as
+    installed, delegating everything else to the real lookup.
+
+    `_run_step` consults `_missing_requirements` — and so `shutil.which` —
+    *before* it reaches `TOOL_MAP`. A test that patches only `TOOL_MAP`
+    therefore exercises the NOT_CONFIGURED path instead of its own mocks, and
+    whether it passes comes down to whether sublist3r / sherlock / holehe
+    happen to be on the PATH of the machine running it. A rendering test
+    should not assert on that.
+
+    The set is derived from TOOL_REQUIREMENTS rather than hardcoded, so a tool
+    added later with a new binary requirement is covered without editing this.
+    """
+    from openosint.playbooks.runner import TOOL_REQUIREMENTS
+
+    gated = {binary for _env, binaries, _note in TOOL_REQUIREMENTS.values() for binary in binaries}
+    if name in gated:
+        return f"/usr/bin/{name}"
+    return _REAL_WHICH(name)
 
 
 # ---------------------------------------------------------------------------
@@ -196,7 +224,10 @@ class TestPlaybookRunner:
         from openosint.playbooks.runner import TOOL_MAP, run_playbook
 
         recipe = load_recipe("domain")
-        with patch.dict(TOOL_MAP, _make_tool_mocks()):
+        with (
+            patch.dict(TOOL_MAP, _make_tool_mocks()),
+            patch("shutil.which", _which_with_osint_binaries_installed),
+        ):
             report_path = await run_playbook(
                 recipe, "example.com", is_pdf_disabled=True, reports_dir=tmp_path
             )
@@ -274,7 +305,10 @@ class TestPlaybookRunner:
         mocks = _make_tool_mocks(
             overrides={"search_domain": AsyncMock(side_effect=RuntimeError("binary missing"))}
         )
-        with patch.dict(TOOL_MAP, mocks):
+        with (
+            patch.dict(TOOL_MAP, mocks),
+            patch("shutil.which", _which_with_osint_binaries_installed),
+        ):
             report_path = await run_playbook(
                 recipe, "example.com", is_pdf_disabled=True, reports_dir=tmp_path
             )
@@ -318,7 +352,10 @@ class TestPlaybookRunner:
 
         recipe = load_recipe("domain")
         mocks = _make_tool_mocks(overrides={"search_domain": AsyncMock(return_value="")})
-        with patch.dict(TOOL_MAP, mocks):
+        with (
+            patch.dict(TOOL_MAP, mocks),
+            patch("shutil.which", _which_with_osint_binaries_installed),
+        ):
             report_path = await run_playbook(
                 recipe, "example.com", is_pdf_disabled=True, reports_dir=tmp_path
             )
@@ -634,14 +671,16 @@ class TestPersonPlaybook:
         assert "⚠ Step error" not in content
 
     async def test_person_summary_counts_correct(self, tmp_path, monkeypatch):
-        import shutil as _shutil
-
+        # This previously wired a fake shutil whose `which` delegated straight
+        # back to the real one, so the sherlock/holehe steps it means to
+        # exercise were skipped as NOT_CONFIGURED unless those binaries were
+        # installed on the machine running the test.
         monkeypatch.setattr(
             "openosint.playbooks.runner.shutil",
             type(
                 "shutil",
                 (),
-                {"which": staticmethod(lambda b: _shutil.which(b))},
+                {"which": staticmethod(_which_with_osint_binaries_installed)},
             )(),
         )
 
@@ -771,7 +810,10 @@ class TestToolErrorDetection:
             "search_username": AsyncMock(return_value=_USER_OUTPUT),
             "search_email": AsyncMock(return_value=_EMAIL_INVALID_INPUT),
         }
-        with patch.dict(TOOL_MAP, mocks):
+        with (
+            patch.dict(TOOL_MAP, mocks),
+            patch("shutil.which", _which_with_osint_binaries_installed),
+        ):
             report_path = await run_playbook(
                 recipe, "johndoe99", is_pdf_disabled=True, reports_dir=tmp_path
             )

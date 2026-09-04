@@ -13,6 +13,7 @@ import pytest
 
 pytest.importorskip("followthemoney", reason="requires the 'graph' extra")
 
+import importlib.util  # noqa: E402
 import json  # noqa: E402
 import sys  # noqa: E402
 from datetime import datetime, timezone  # noqa: E402
@@ -215,7 +216,13 @@ class TestDecideReviewCandidate:
         store.close()
 
 
-if sys.version_info >= (3, 11):
+# nomenklatura is declared as `graph-dedup = ["nomenklatura>=4.14.0;
+# python_version>='3.11'"]`, so a Python-version check reads like a proxy for
+# "nomenklatura is installed" — but it is not one: an environment that
+# installs `.[dev,stix,graph]` without `graph-dedup` satisfies the version
+# check and still has no nomenklatura, and run_crossref then raises ImportError
+# at collection. Guard on the dependency that is actually needed.
+if sys.version_info >= (3, 11) and importlib.util.find_spec("nomenklatura") is not None:
 
     class TestRejectionNeverResurfaces:
         """End-to-end: reject a real crossref suggestion, re-run crossref, assert it's gone."""
