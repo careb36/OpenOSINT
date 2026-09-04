@@ -63,6 +63,7 @@ _SUMMARY = (
     "Credential rotation strongly advised."
 )
 
+
 # Each call to _set_state(page, JS_EXPR) injects one animation frame
 def _set_state(page, js: str) -> None:
     page.evaluate(f"""
@@ -111,9 +112,19 @@ def convert_video(webm_path: Path) -> None:
     log("Converting to MP4 (H.264, faststart)...")
     r = subprocess.run(
         [
-            "ffmpeg", "-y", "-i", str(webm_path),
-            "-vcodec", "libx264", "-crf", "23", "-preset", "medium",
-            "-movflags", "+faststart", str(mp4_path),
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(webm_path),
+            "-vcodec",
+            "libx264",
+            "-crf",
+            "23",
+            "-preset",
+            "medium",
+            "-movflags",
+            "+faststart",
+            str(mp4_path),
         ],
         capture_output=True,
     )
@@ -125,13 +136,18 @@ def convert_video(webm_path: Path) -> None:
     log("Converting to GIF (1280px, 12fps)...")
     r = subprocess.run(
         [
-            "ffmpeg", "-y", "-i", str(webm_path),
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(webm_path),
             "-vf",
             (
                 "fps=12,scale=1280:-1:flags=lanczos,"
                 "split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer"
             ),
-            "-loop", "0", str(gif_path),
+            "-loop",
+            "0",
+            str(gif_path),
         ],
         capture_output=True,
     )
@@ -143,13 +159,18 @@ def convert_video(webm_path: Path) -> None:
     log("Converting to small GIF (800px, 8fps)...")
     r = subprocess.run(
         [
-            "ffmpeg", "-y", "-i", str(webm_path),
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(webm_path),
             "-vf",
             (
                 "fps=8,scale=800:-1:flags=lanczos,"
                 "split[s0][s1];[s0]palettegen=max_colors=64[p];[s1][p]paletteuse=dither=bayer"
             ),
-            "-loop", "0", str(gif_small),
+            "-loop",
+            "0",
+            str(gif_small),
         ],
         capture_output=True,
     )
@@ -170,7 +191,7 @@ def _js_str(s: str) -> str:
 def _inject_investigation(page) -> None:
     """Animate the email investigation in 4 stages via direct Alpine.js state injection."""
     email = _EMAIL
-    email_js = email.replace("@", "\\u0040")   # safe in JS strings
+    email_js = email.replace("@", "\\u0040")  # safe in JS strings
     intro_content = _js_str(f"Investigating **{email}**...\n\n")
     email_out_js = _js_str(_EMAIL_TOOL_OUTPUT)
     breach_out_js = _js_str(_BREACH_TOOL_OUTPUT)

@@ -4,6 +4,7 @@ OpenOSINT Cloud — FastAPI application entry point.
 Heroku Procfile:  web: uvicorn cloud.main:app --host 0.0.0.0 --port $PORT
 Local dev:        python -m cloud.main
 """
+
 from __future__ import annotations
 
 import logging
@@ -16,8 +17,9 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from cloud import db, keys
 from cloud.config import DATABASE_URL, resolve_session_secret
-from cloud.routes import dashboard, enrich, oauth as oauth_routes, usage
+from cloud.routes import dashboard, enrich, usage
 from cloud.routes import keys as keys_route
+from cloud.routes import oauth as oauth_routes
 from cloud.routes.mcp_gateway import create_mcp_asgi_app
 
 logging.basicConfig(
@@ -61,9 +63,9 @@ def create_app() -> FastAPI:
         secret_key=resolve_session_secret(),
         https_only=bool(DATABASE_URL),
     )
-    app.include_router(enrich.router,      prefix="/v1")
-    app.include_router(usage.router,       prefix="/v1")
-    app.include_router(keys_route.router,  prefix="/v1")
+    app.include_router(enrich.router, prefix="/v1")
+    app.include_router(usage.router, prefix="/v1")
+    app.include_router(keys_route.router, prefix="/v1")
     app.include_router(oauth_routes.router)
     app.include_router(dashboard.router)
     app.mount("/mcp", create_mcp_asgi_app())

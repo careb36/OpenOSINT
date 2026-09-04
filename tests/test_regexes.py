@@ -21,7 +21,6 @@ import pytest
 from openosint.correlation import EntityType
 from openosint.regexes import EMAIL_FIND_RE, EMAIL_RE
 
-
 # ---------------------------------------------------------------------------
 # EMAIL_RE — whole-string validation (anchored, case-insensitive)
 # ---------------------------------------------------------------------------
@@ -33,8 +32,8 @@ class TestEmailRE:
         [
             "user@example.com",
             "user+alias@example.com",
-            "first.last@example.com",   # dot in local part is fine
-            "User@EXAMPLE.COM",         # IGNORECASE: uppercase matches
+            "first.last@example.com",  # dot in local part is fine
+            "User@EXAMPLE.COM",  # IGNORECASE: uppercase matches
             "u@x.io",
         ],
     )
@@ -48,12 +47,12 @@ class TestEmailRE:
             "@nodomain.com",
             "missing-at-sign.com",
             "user@",
-            "user@domain",              # no TLD
-            "user@domain.",             # trailing dot, empty TLD
-            "user@ domain.com",         # space in domain
-            "user@domain.c",            # single-char TLD (< 2 chars)
-            "user@domain.com trailing junk",   # extra text — $ anchor rejects
-            "prefix user@domain.com",          # text before — ^ anchor rejects
+            "user@domain",  # no TLD
+            "user@domain.",  # trailing dot, empty TLD
+            "user@ domain.com",  # space in domain
+            "user@domain.c",  # single-char TLD (< 2 chars)
+            "user@domain.com trailing junk",  # extra text — $ anchor rejects
+            "prefix user@domain.com",  # text before — ^ anchor rejects
         ],
     )
     def test_rejects_invalid_or_partial(self, value: str) -> None:
@@ -118,23 +117,29 @@ class TestEmailFindRE:
 class TestDetectEntityTypeIPv6:
     """Regression: _detect_entity_type must return EntityType.IP for IPv6 addresses."""
 
-    @pytest.mark.parametrize("value,expected", [
-        ("2001:db8::1", EntityType.IP),
-        ("2001:0db8:85a3:0000:0000:8a2e:0370:7334", EntityType.IP),
-        ("192.168.1.1", EntityType.IP),
-        ("user@example.com", EntityType.EMAIL),
-    ])
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("2001:db8::1", EntityType.IP),
+            ("2001:0db8:85a3:0000:0000:8a2e:0370:7334", EntityType.IP),
+            ("192.168.1.1", EntityType.IP),
+            ("user@example.com", EntityType.EMAIL),
+        ],
+    )
     def test_detects_correct_entity_type(self, value: str, expected: EntityType) -> None:
         from openosint.pivot import _detect_entity_type
 
         assert _detect_entity_type(value).type == expected
 
-    @pytest.mark.parametrize("value", [
-        "1:2:3",       # too few groups for a valid IPv6
-        ":::",         # three consecutive colons, never valid
-        "::::::::",    # eight consecutive colons, exceeds limit
-        "12345::1",    # group has 5 hex digits, max is 4
-    ])
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "1:2:3",  # too few groups for a valid IPv6
+            ":::",  # three consecutive colons, never valid
+            "::::::::",  # eight consecutive colons, exceeds limit
+            "12345::1",  # group has 5 hex digits, max is 4
+        ],
+    )
     def test_invalid_ip_like_strings_not_classified_as_ip(self, value: str) -> None:
         from openosint.regexes import detect_entity_kind
 

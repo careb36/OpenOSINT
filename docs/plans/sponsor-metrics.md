@@ -70,8 +70,10 @@ python scripts/sponsor_metrics.py --date 2026-07-25 --force  # overwrite an exis
 ```python
 token = os.environ.get("GITHUB_TOKEN")
 if not token:
-    sys.exit("[sponsor_metrics] ERROR: GITHUB_TOKEN env var is not set. "
-              "Needs 'repo' scope (traffic endpoints require push access).")
+    sys.exit(
+        "[sponsor_metrics] ERROR: GITHUB_TOKEN env var is not set. "
+        "Needs 'repo' scope (traffic endpoints require push access)."
+    )
 ```
 
 Checked before any network call, in collect mode only (`--report` needs no

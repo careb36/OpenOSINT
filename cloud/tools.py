@@ -9,6 +9,7 @@ excluded — see tests/test_cloud.py's allow-list guard test).
 Every tool here must complete under the Heroku 30 s HTTP router limit
 (TOOL_TIMEOUT_SECONDS = 25 s with headroom).
 """
+
 from __future__ import annotations
 
 import logging
@@ -39,17 +40,31 @@ def _censys_keys(combined: str | None) -> dict[str, str] | None:
 # ponytail: kept out of ALLOW_LIST until SHODAN_API_KEY is set in prod (no key
 # = every call fails upstream for every customer). Re-enable by adding
 # "search_shodan": _SHODAN_ENTRY, back to ALLOW_LIST below — nothing else to change.
-_SHODAN_ENTRY = lambda t, k: run_shodan_osint(query=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k)
+def _SHODAN_ENTRY(target: str, api_key: str | None) -> Coroutine[Any, Any, str]:
+    return run_shodan_osint(
+        query=target,
+        timeout_seconds=TOOL_TIMEOUT_SECONDS,
+        api_key=api_key,
+    )
+
 
 # Each value is a coroutine factory: (target: str, api_key: str | None) → Awaitable[str].
 ALLOW_LIST: dict[str, Callable[[str, str | None], Coroutine[Any, Any, str]]] = {
-    "search_ip":          lambda t, k: run_ip_osint(ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k),
-    "search_ip2location": lambda t, k: run_ip2location_osint(ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k),
-    "search_abuseipdb":   lambda t, k: run_abuseipdb_osint(ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k),
-    "search_dns":         lambda t, _: run_dns_osint(domain=t, timeout_seconds=TOOL_TIMEOUT_SECONDS),
-    "search_domain":      lambda t, _: run_domain_osint(domain=t, timeout_seconds=TOOL_TIMEOUT_SECONDS),
-    "search_virustotal":  lambda t, k: run_virustotal_osint(target=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k),
-    "search_censys":      lambda t, k: run_censys_osint(t, TOOL_TIMEOUT_SECONDS, api_keys=_censys_keys(k)),
+    "search_ip": lambda t, k: run_ip_osint(ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k),
+    "search_ip2location": lambda t, k: run_ip2location_osint(
+        ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k
+    ),
+    "search_abuseipdb": lambda t, k: run_abuseipdb_osint(
+        ip=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k
+    ),
+    "search_dns": lambda t, _: run_dns_osint(domain=t, timeout_seconds=TOOL_TIMEOUT_SECONDS),
+    "search_domain": lambda t, _: run_domain_osint(domain=t, timeout_seconds=TOOL_TIMEOUT_SECONDS),
+    "search_virustotal": lambda t, k: run_virustotal_osint(
+        target=t, timeout_seconds=TOOL_TIMEOUT_SECONDS, api_key=k
+    ),
+    "search_censys": lambda t, k: run_censys_osint(
+        t, TOOL_TIMEOUT_SECONDS, api_keys=_censys_keys(k)
+    ),
 }
 
 

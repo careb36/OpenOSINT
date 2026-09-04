@@ -293,8 +293,7 @@ def to_stix_bundle(graph: "EntityGraph") -> "Any":
         import stix2
     except ImportError as exc:
         raise ImportError(
-            "STIX 2.1 export requires the 'stix' extra. "
-            "Install with: pip install openosint[stix]"
+            "STIX 2.1 export requires the 'stix' extra. Install with: pip install openosint[stix]"
         ) from exc
 
     objects: list[Any] = [_openosint_identity()]

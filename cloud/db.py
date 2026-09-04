@@ -14,6 +14,7 @@ get_or_create_user(provider, provider_user_id, email) → User
 get_user(user_id)            → User | None
 link_existing_customer_key(user_id, api_key) → "ok" | "not_found" | "conflict"
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import asyncpg  # type: ignore
+
     _HAS_ASYNCPG = True
 except ImportError:
     _HAS_ASYNCPG = False
@@ -36,35 +38,33 @@ _pool: Any = None  # asyncpg.Pool or None
 
 # ── domain model ─────────────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class Customer:
     api_key: str
     credits: int
     plan: str
-    created_at: datetime = dataclasses.field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass(frozen=True)
 class User:
     """An OAuth login identity (GitHub / Google). Web-dashboard login only —
     X-API-Key / MCP bearer auth never reads this table."""
+
     id: int
     provider: str
     provider_user_id: str
     email: str | None
     customer_api_key: str | None
-    created_at: datetime = dataclasses.field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ── in-memory store (tests only) ─────────────────────────────────────────────
 
-_MEMORY_CUSTOMERS: dict[str, Customer] = {}   # api_key → Customer
+_MEMORY_CUSTOMERS: dict[str, Customer] = {}  # api_key → Customer
 
-_MEMORY_USERS: dict[int, User] = {}                        # id → User
+_MEMORY_USERS: dict[int, User] = {}  # id → User
 _MEMORY_USERS_BY_IDENTITY: dict[tuple[str, str], int] = {}  # (provider, provider_user_id) → id
 _next_user_id = 1
 
@@ -74,6 +74,7 @@ def _is_memory_mode() -> bool:
 
 
 # ── pool lifecycle ────────────────────────────────────────────────────────────
+
 
 async def init_pool() -> None:
     global _pool
@@ -101,12 +102,12 @@ async def close_pool() -> None:
 
 # ── read ──────────────────────────────────────────────────────────────────────
 
+
 async def get_customer(api_key: str) -> Customer | None:
     if _is_memory_mode():
         return _MEMORY_CUSTOMERS.get(api_key)
     row = await _pool.fetchrow(
-        "SELECT api_key, credits, plan, created_at "
-        "FROM customers WHERE api_key = $1",
+        "SELECT api_key, credits, plan, created_at FROM customers WHERE api_key = $1",
         api_key,
     )
     if row is None:
@@ -120,6 +121,7 @@ async def get_customer(api_key: str) -> Customer | None:
 
 
 # ── write ─────────────────────────────────────────────────────────────────────
+
 
 async def decrement_credits(api_key: str, cost: int = 1) -> int | None:
     """
@@ -146,6 +148,7 @@ async def decrement_credits(api_key: str, cost: int = 1) -> int | None:
 
 
 # ── users (OAuth login identities) ────────────────────────────────────────────
+
 
 async def get_or_create_user(provider: str, provider_user_id: str, email: str | None) -> User:
     """Find the user for (provider, provider_user_id), creating one on first login.
@@ -217,9 +220,7 @@ def _user_from_row(row: Any) -> User:
 def _customer_api_key_claimed(api_key: str, exclude_user_id: int) -> bool:
     """True if some other user already holds this customer_api_key (memory mode)."""
     return any(
-        u.customer_api_key == api_key
-        for uid, u in _MEMORY_USERS.items()
-        if uid != exclude_user_id
+        u.customer_api_key == api_key for uid, u in _MEMORY_USERS.items() if uid != exclude_user_id
     )
 
 
@@ -245,9 +246,7 @@ async def link_existing_customer_key(user_id: int, api_key: str) -> str:
         _MEMORY_USERS[user_id] = dataclasses.replace(user, customer_api_key=api_key)
         return "ok"
 
-    customer_row = await _pool.fetchrow(
-        "SELECT api_key FROM customers WHERE api_key = $1", api_key
-    )
+    customer_row = await _pool.fetchrow("SELECT api_key FROM customers WHERE api_key = $1", api_key)
     if customer_row is None:
         return "not_found"
     try:

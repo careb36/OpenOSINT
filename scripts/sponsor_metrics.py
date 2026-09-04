@@ -210,7 +210,9 @@ def compute_trailing_30_days(snapshots: list[dict], as_of: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _find_snapshot_near(snapshots: list[dict], target: date, tolerance_days: int = 5) -> dict | None:
+def _find_snapshot_near(
+    snapshots: list[dict], target: date, tolerance_days: int = 5
+) -> dict | None:
     best, best_diff = None, None
     for snap in snapshots:
         diff = abs((date.fromisoformat(snap["date"]) - target).days)
@@ -264,12 +266,16 @@ def render_report(out_dir: Path) -> str:
     referrers = latest["github"]["traffic"].get("referrers", [])
     if referrers:
         top = referrers[0]
-        lines.append(f"Top referrer:                                {top['referrer']} ({top['count']} visits)")
+        lines.append(
+            f"Top referrer:                                {top['referrer']} ({top['count']} visits)"
+        )
 
     if not prior:
         days_span = (latest_date - date.fromisoformat(snapshots[0]["date"])).days
         lines.append("")
-        lines.append(f"(insufficient history for month-over-month growth — {days_span} days collected so far)")
+        lines.append(
+            f"(insufficient history for month-over-month growth — {days_span} days collected so far)"
+        )
 
     return "\n".join(lines)
 
@@ -280,12 +286,24 @@ def render_report(out_dir: Path) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--repo", default=_DEFAULT_REPO, help=f"owner/name (default: {_DEFAULT_REPO}).")
-    parser.add_argument("--out-dir", type=Path, default=_DEFAULT_OUT_DIR, help="Snapshot directory.")
-    parser.add_argument("--date", default=None, help="Snapshot date, YYYY-MM-DD (default: today, UTC).")
-    parser.add_argument("--force", action="store_true", help="Overwrite an existing dated snapshot.")
-    parser.add_argument("--report", action="store_true", help="Print a summary from saved snapshots (no network).")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--repo", default=_DEFAULT_REPO, help=f"owner/name (default: {_DEFAULT_REPO})."
+    )
+    parser.add_argument(
+        "--out-dir", type=Path, default=_DEFAULT_OUT_DIR, help="Snapshot directory."
+    )
+    parser.add_argument(
+        "--date", default=None, help="Snapshot date, YYYY-MM-DD (default: today, UTC)."
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Overwrite an existing dated snapshot."
+    )
+    parser.add_argument(
+        "--report", action="store_true", help="Print a summary from saved snapshots (no network)."
+    )
     args = parser.parse_args()
 
     if args.report:

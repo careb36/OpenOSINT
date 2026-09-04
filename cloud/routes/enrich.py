@@ -1,4 +1,5 @@
 """POST /v1/enrich — run an OSINT tool against a target."""
+
 from __future__ import annotations
 
 import asyncio
@@ -38,7 +39,10 @@ def _log_outcome(tool: str, api_key: str, status: str, elapsed: float) -> None:
     status, and timing. Never the target, never a provider response body."""
     logger.info(
         "enrich: customer=%s tool=%s status=%s elapsed=%.2fs",
-        _log_id(api_key), tool, status, elapsed,
+        _log_id(api_key),
+        tool,
+        status,
+        elapsed,
     )
 
 
@@ -66,8 +70,7 @@ async def enrich(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"Tool '{body.tool}' is not available in v1.  "
-                f"Available: {sorted(tools.ALLOW_LIST)}"
+                f"Tool '{body.tool}' is not available in v1.  Available: {sorted(tools.ALLOW_LIST)}"
             ),
         )
 

@@ -9,6 +9,7 @@ rapid-fire requests within their credit balance.
 BurstLimiter is a small Protocol so the in-process implementation can be
 swapped for a Redis/Postgres-backed one later without touching call sites.
 """
+
 from __future__ import annotations
 
 import time

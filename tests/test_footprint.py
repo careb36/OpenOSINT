@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -375,10 +374,7 @@ class TestExtractFootprint:
     def test_extracts_domain_entities(self):
         from openosint.extractors import _extract_footprint
 
-        raw = (
-            "[Footprint] URL: https://linkedin.com/in/johndoe\n"
-            "[Footprint] Domain: linkedin.com\n"
-        )
+        raw = "[Footprint] URL: https://linkedin.com/in/johndoe\n[Footprint] Domain: linkedin.com\n"
         entities, _ = _extract_footprint(raw, self._seed())
         domain_entities = [e for e in entities if e.type.value == "domain"]
         assert len(domain_entities) == 1
@@ -410,10 +406,7 @@ class TestExtractFootprint:
     def test_deduplicates_domains(self):
         from openosint.extractors import _extract_footprint
 
-        raw = (
-            "[Footprint] Domain: linkedin.com\n"
-            "[Footprint] Domain: linkedin.com\n"
-        )
+        raw = "[Footprint] Domain: linkedin.com\n[Footprint] Domain: linkedin.com\n"
         entities, _ = _extract_footprint(raw, self._seed())
         domain_entities = [e for e in entities if e.type.value == "domain"]
         assert len(domain_entities) == 1

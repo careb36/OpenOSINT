@@ -124,8 +124,7 @@ class TestSubgraph:
         assert person["data"]["label"] == "John Doe"
         assert person["data"]["datasets"] == [_DATASET]  # provenance summary
         assert any(
-            e["data"]["kind"] == "statement" and e["data"]["type"] == "owner"
-            for e in body["edges"]
+            e["data"]["kind"] == "statement" and e["data"]["type"] == "owner" for e in body["edges"]
         )
 
     async def test_depth_cap_is_enforced(self, client, graph_db):

@@ -31,7 +31,6 @@ from openosint.graph.export.stix import (  # noqa: E402
     to_stix_json,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -274,7 +273,9 @@ class TestRelationships:
         """Graph with one email→domain relationship; returns graph + ids."""
         email = make_entity(EntityType.EMAIL, "a@example.com", 0.9, "search_email")
         domain = make_entity(EntityType.DOMAIN, "example.com", 0.9, "search_whois")
-        rel = Relationship(source=email, target=domain, kind="registered_at", source_tool="search_whois")
+        rel = Relationship(
+            source=email, target=domain, kind="registered_at", source_tool="search_whois"
+        )
         g = _graph_with(email, domain, relationships=[rel])
         return g, email, domain
 
@@ -314,9 +315,7 @@ class TestRelationships:
     def test_relationship_confidence_encoded(self):
         email = make_entity(EntityType.EMAIL, "a@example.com", 0.9)
         domain = make_entity(EntityType.DOMAIN, "example.com", 0.8)
-        rel = Relationship(
-            source=email, target=domain, kind="at", source_tool="", confidence=0.75
-        )
+        rel = Relationship(source=email, target=domain, kind="at", source_tool="", confidence=0.75)
         g = _graph_with(email, domain, relationships=[rel])
         objs = _bundle_objects(g)
         stix_rel = next(o for o in objs if o["type"] == "relationship")
@@ -438,9 +437,10 @@ class TestScoSpecIds:
         url = next(o for o in objs if o["type"] == "url")
         assert domain["id"] == stix2.DomainName(value=domain["value"]).id
         assert email["id"] == stix2.EmailAddress(value=email["value"]).id
-        assert user["id"] == stix2.UserAccount(
-            user_id=user["user_id"], account_type=user["account_type"]
-        ).id
+        assert (
+            user["id"]
+            == stix2.UserAccount(user_id=user["user_id"], account_type=user["account_type"]).id
+        )
         assert ipv4["id"] == stix2.IPv4Address(value=ipv4["value"]).id
         assert ipv6["id"] == stix2.IPv6Address(value=ipv6["value"]).id
         assert url["id"] == stix2.URL(value=url["value"]).id
@@ -505,6 +505,7 @@ class TestToStixJson:
 class TestImportError:
     def test_importerror_message_mentions_extra(self, monkeypatch):
         import sys
+
         original = sys.modules.get("stix2")
         sys.modules["stix2"] = None  # type: ignore[assignment]
         try:

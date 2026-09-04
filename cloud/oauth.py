@@ -8,6 +8,7 @@ optionally linked to a customer via cloud/db.get_or_create_user.
 
 No Facebook: Meta rejects OSINT apps in app review.
 """
+
 from __future__ import annotations
 
 from authlib.integrations.starlette_client import OAuth

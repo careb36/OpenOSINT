@@ -96,10 +96,7 @@ _TOOL_REQUIRED_KEYS: dict[str, list[str]] = {
 
 def _is_key_available(tool_name: str) -> bool:
     """Return True if all required API keys for *tool_name* are present."""
-    return all(
-        os.environ.get(key, "").strip()
-        for key in _TOOL_REQUIRED_KEYS.get(tool_name, [])
-    )
+    return all(os.environ.get(key, "").strip() for key in _TOOL_REQUIRED_KEYS.get(tool_name, []))
 
 
 def _get_routable_tools(entity: Entity) -> list[str]:
@@ -241,9 +238,7 @@ async def investigate_graph(
             batch,
         )
 
-        results = await asyncio.gather(
-            *[_run_tool_safe(t, entity, timeout_seconds) for t in batch]
-        )
+        results = await asyncio.gather(*[_run_tool_safe(t, entity, timeout_seconds) for t in batch])
 
         for tool_name, raw in zip(batch, results):
             extractor = EXTRACTOR_REGISTRY.get(tool_name)

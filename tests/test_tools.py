@@ -364,9 +364,7 @@ class TestSearchGdeltGeoHappyPath:
         with patch(
             "openosint.tools.search_gdelt_geo.requests.get", return_value=mock_response
         ) as mock_get:
-            await run_gdelt_geo_osint(
-                "x", timeout_seconds=5, timespan=999999, maxpoints=999999
-            )
+            await run_gdelt_geo_osint("x", timeout_seconds=5, timespan=999999, maxpoints=999999)
 
         params = mock_get.call_args.kwargs["params"]
         assert params["timespan"] == _MAX_TIMESPAN

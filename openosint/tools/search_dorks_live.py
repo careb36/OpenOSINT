@@ -141,9 +141,7 @@ async def run_dorks_live_osint(
         google_url = _build_google_url(query)
         lines.append(f"[+] Dork: {query}")
         try:
-            data = await asyncio.to_thread(
-                _fetch_serp, google_url, api_key, zone, timeout_seconds
-            )
+            data = await asyncio.to_thread(_fetch_serp, google_url, api_key, zone, timeout_seconds)
             results = _extract_organic(data)
             if results:
                 for r in results:

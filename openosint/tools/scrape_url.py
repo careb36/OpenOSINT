@@ -77,9 +77,7 @@ def _fetch_unlocker(url: str, api_key: str, zone: str, timeout: int) -> str:
     if response.status_code == 429:
         raise OSINTError("Bright Data Web Unlocker: rate limit exceeded.")
     if response.status_code != 200:
-        raise ToolExecutionError(
-            f"Bright Data Web Unlocker returned HTTP {response.status_code}."
-        )
+        raise ToolExecutionError(f"Bright Data Web Unlocker returned HTTP {response.status_code}.")
 
     # format="raw": body is the plain markdown string — do not json.parse it
     return response.text

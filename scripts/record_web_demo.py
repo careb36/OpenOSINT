@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Record OpenOSINT web demo GIF — 1920x1080, 120 frames @ 150ms."""
+
 import asyncio
 import io
 from pathlib import Path
