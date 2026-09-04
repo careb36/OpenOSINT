@@ -22,6 +22,10 @@ DESIGN CHOICES
     PERSON   → Identity(class=individual) (SDO)
     ORG      → Identity(class=organization) (SDO)
     ASN      → AutonomousSystem    (SCO)
+* SCO IDs are generated through stix2's built-in STIX 2.1 deterministic
+  algorithm (OASIS namespace + type-specific contributing properties).
+* SDO IDs (identity, note, relationship) use OpenOSINT's deterministic
+  namespace UUID strategy.
 * Relationships in EntityGraph become STIX Relationship SDOs with the
   `relationship_type` set to the EntityGraph `kind` string (lowercased,
   spaces → hyphens). Unresolvable source/target references are silently
@@ -34,22 +38,12 @@ DESIGN CHOICES
       tools and entity type as structured context for OpenCTI.
 * A single Identity SDO representing "OpenOSINT" is added as the
   `created_by_ref` for all objects so OpenCTI attributes findings correctly.
-* Bundle id and object ids are deterministic: SHA-256 of the
-  (type, value) pair for SCOs/SDOs, so re-exporting the same graph
-  produces the same bundle, enabling idempotent OpenCTI ingestion.
-
-USAGE
------
-    from openosint.graph.export.stix import to_stix_bundle
-    bundle = to_stix_bundle(graph)
-    print(bundle.serialize(pretty=True))       # JSON string
-    # or pass directly to pycti:
-    # opencti_api_client.stix2.import_bundle_from_dict(bundle.serialize())
+* Bundle ID is deterministic from sorted object IDs, so re-exporting the same
+  graph yields the same bundle identifier.
 """
 
 from __future__ import annotations
 
-import hashlib
 import re
 import uuid
 from typing import TYPE_CHECKING, Any
@@ -89,6 +83,19 @@ def _stix_id(stix_type: str, value: str) -> str:
     return f"{stix_type}--{uid}"
 
 
+def _sco_id(stix_class_name: str, **contributing: Any) -> str:
+    """Return the STIX 2.1 deterministic id for one SCO."""
+    import stix2
+
+    return getattr(stix2, stix_class_name)(**contributing).id
+
+
+def _bundle_id(object_ids: list[str]) -> str:
+    """Return a deterministic bundle id derived from sorted object ids."""
+    joined = "|".join(sorted(object_ids))
+    return f"bundle--{uuid.uuid5(_OPENOSINT_NS, f'bundle:{joined}')}"
+
+
 def _confidence_int(confidence: float) -> int:
     """Convert [0.0, 1.0] float to STIX integer confidence [0, 100]."""
     return max(0, min(100, round(confidence * 100)))
@@ -122,7 +129,7 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
     """
     from openosint.correlation import EntityType
 
-    v = entity.value
+    raw_value = entity.value
     conf = _confidence_int(entity.confidence)
     labels = sorted(entity.source_tools) if entity.source_tools else []
     common: dict[str, Any] = {
@@ -137,29 +144,33 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
     t = entity.type
 
     if t == EntityType.EMAIL:
-        sid = _stix_id("email-addr", entity.normalized)
-        return {"type": "email-addr", "id": sid, "value": v, **common}
+        emitted = entity.normalized
+        sid = _sco_id("EmailAddress", value=emitted)
+        return {"type": "email-addr", "id": sid, "value": emitted, **common}
 
     if t == EntityType.USERNAME:
-        sid = _stix_id("user-account", entity.normalized)
+        emitted = entity.normalized
+        sid = _sco_id("UserAccount", user_id=emitted, account_type="generic")
         return {
             "type": "user-account",
             "id": sid,
-            "user_id": v,
+            "user_id": emitted,
             "account_type": "generic",
             **common,
         }
 
     if t == EntityType.DOMAIN:
-        sid = _stix_id("domain-name", entity.normalized)
-        return {"type": "domain-name", "id": sid, "value": v, **common}
+        emitted = entity.normalized
+        sid = _sco_id("DomainName", value=emitted)
+        return {"type": "domain-name", "id": sid, "value": emitted, **common}
 
     if t == EntityType.IP:
-        if _IPV6_RE.match(v.strip()):
-            sid = _stix_id("ipv6-addr", entity.normalized)
-            return {"type": "ipv6-addr", "id": sid, "value": v, **common}
-        sid = _stix_id("ipv4-addr", entity.normalized)
-        return {"type": "ipv4-addr", "id": sid, "value": v, **common}
+        emitted = entity.normalized
+        if _IPV6_RE.match(emitted.strip()):
+            sid = _sco_id("IPv6Address", value=emitted)
+            return {"type": "ipv6-addr", "id": sid, "value": emitted, **common}
+        sid = _sco_id("IPv4Address", value=emitted)
+        return {"type": "ipv4-addr", "id": sid, "value": emitted, **common}
 
     if t == EntityType.PHONE:
         sid = _stix_id("x-openosint-phone-number", entity.normalized)
@@ -167,26 +178,32 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
         return {
             "type": "x-openosint-phone-number",
             "id": sid,
-            "number": v,
+            "number": raw_value,
             **common,
         }
 
     if t == EntityType.URL:
-        sid = _stix_id("url", entity.normalized)
-        return {"type": "url", "id": sid, "value": v, **common}
+        emitted = raw_value
+        # URL normalization strips schemes in correlation.py; keep and ID the
+        # original URL so emitted value remains a valid STIX URL SCO.
+        sid = _sco_id("URL", value=emitted)
+        return {"type": "url", "id": sid, "value": emitted, **common}
 
     if t == EntityType.HASH:
         # Detect hash algorithm by length (MD5=32, SHA1=40, SHA256=64)
-        h = v.lower().strip()
+        h = raw_value.lower().strip()
         if len(h) == 32:
-            hashes = {"MD5": v}
+            hashes = {"MD5": raw_value}
         elif len(h) == 40:
-            hashes = {"SHA-1": v}
+            hashes = {"SHA-1": raw_value}
         elif len(h) == 64:
-            hashes = {"SHA-256": v}
+            hashes = {"SHA-256": raw_value}
         else:
-            hashes = {"UNKNOWN": v}
-        sid = _stix_id("file", entity.normalized)
+            hashes = {"UNKNOWN": raw_value}
+        if "UNKNOWN" in hashes:
+            sid = _stix_id("file", raw_value)
+        else:
+            sid = _sco_id("File", hashes=hashes)
         return {"type": "file", "id": sid, "hashes": hashes, **common}
 
     if t == EntityType.PERSON:
@@ -194,7 +211,7 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
         return {
             "type": "identity",
             "id": sid,
-            "name": v,
+            "name": raw_value,
             "identity_class": "individual",
             **common,
         }
@@ -204,20 +221,26 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
         return {
             "type": "identity",
             "id": sid,
-            "name": v,
+            "name": raw_value,
             "identity_class": "organization",
             **common,
         }
 
     if t == EntityType.ASN:
         # Normalize "AS12345" or "12345" → integer
-        asn_str = v.upper().lstrip("AS").strip()
+        asn_str = raw_value.upper().lstrip("AS").strip()
         try:
             number = int(asn_str)
         except ValueError:
             number = 0
-        sid = _stix_id("autonomous-system", entity.normalized)
-        return {"type": "autonomous-system", "id": sid, "number": number, "name": v, **common}
+        sid = _sco_id("AutonomousSystem", number=number)
+        return {
+            "type": "autonomous-system",
+            "id": sid,
+            "number": number,
+            "name": raw_value,
+            **common,
+        }
 
     return None
 
@@ -316,7 +339,8 @@ def to_stix_bundle(graph: "EntityGraph") -> "Any":
 
     # Build Bundle with allow_custom=True to support x_opencti_score and
     # x-openosint-phone-number custom objects
-    return stix2.Bundle(objects=objects, allow_custom=True)
+    bundle_id = _bundle_id([obj["id"] for obj in objects if "id" in obj])
+    return stix2.Bundle(id=bundle_id, objects=objects, allow_custom=True)
 
 
 def to_stix_json(graph: "EntityGraph", *, pretty: bool = True) -> str:
