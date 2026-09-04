@@ -237,7 +237,6 @@ async def investigate(
     else:
         # Build a typed seed entity and let the BFS take it from there
         from openosint.correlation import EntityType, make_entity
-        from openosint.pivot import investigate_graph
 
         entity_type_str = _KIND_TO_ENTITY_TYPE_STR[kind]
         entity_type = EntityType(entity_type_str)

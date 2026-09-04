@@ -162,7 +162,7 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
         return {"type": "ipv4-addr", "id": sid, "value": v, **common}
 
     if t == EntityType.PHONE:
-        sid = _stix_id("phone-number", entity.normalized)
+        sid = _stix_id("x-openosint-phone-number", entity.normalized)
         # phone-number is not an official SCO; encode as a custom SCO
         return {
             "type": "x-openosint-phone-number",
