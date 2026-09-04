@@ -1,12 +1,13 @@
-# openosint/graph/export.py
+# openosint/graph/export/__init__.py
 """
-Phase 4 — streaming FtM entity export (.ftm-compatible newline-delimited JSON).
+openosint.graph.export — FtM entity export and STIX 2.1 export.
 
-Only needs followthemoney (the `graph` extra) — no nomenklatura import, no
-same_as clustering — so it works on Python 3.10+ without `graph-dedup`.
-Streams one FtM entity dict per entity_id so a caller never needs the whole
-graph in memory to export it; GraphStore.get_all_statements() is itself a
-generator over the sqlite3 cursor for the same reason.
+Re-exports the FtM streaming exporter from this package so that existing
+callers using ``from openosint.graph.export import export_entities`` continue
+to work after the export module was promoted to a package.
+
+STIX 2.1 export is available in the submodule:
+    from openosint.graph.export.stix import to_stix_bundle, to_stix_json
 """
 
 from __future__ import annotations
