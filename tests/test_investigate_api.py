@@ -7,7 +7,6 @@ All tool calls are mocked; no network, no API keys, no binaries required.
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,7 +16,6 @@ from openosint.investigate import (
     InvestigationBudget,
     investigate,
 )
-
 
 # ---------------------------------------------------------------------------
 # InvestigationBudget
@@ -280,7 +278,7 @@ class TestInvestigateReturnType:
 @pytest.mark.asyncio
 async def test_investigate_result_exportable_to_stix():
     """Graph returned by investigate() can be passed straight to to_stix_bundle."""
-    stix2 = pytest.importorskip("stix2", reason="requires the 'stix' extra")
+    pytest.importorskip("stix2", reason="requires the 'stix' extra")
 
     from openosint.graph.export.stix import to_stix_bundle
 
