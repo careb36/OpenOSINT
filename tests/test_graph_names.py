@@ -29,6 +29,11 @@ class TestExtractGithubName:
         assert extract_github_name("not even close to the expected format") is None
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=NotImplementedError,
+    reason="extract_whois_registrant_name() is a deliberate Phase 1 stub — its docstring says it is left unimplemented on purpose. strict=True: once someone implements it these XPASS and fail, forcing this marker off; raises= keeps any other exception a real failure.",
+)
 class TestExtractWhoisRegistrantName:
     """The Phase 1 stub — see openosint/graph/names.py for the full contract."""
 
