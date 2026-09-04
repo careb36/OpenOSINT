@@ -149,6 +149,11 @@ class TestNeighborsCrossLayer:
         store.close()
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=NotImplementedError,
+    reason="rank_neighbors_for_truncation() is a deliberate Phase 2 stub — its docstring says it is left unimplemented on purpose. strict=True: once someone implements it these XPASS and fail, forcing this marker off; raises= keeps any other exception a real failure.",
+)
 class TestRankNeighborsForTruncation:
     """The Phase 2 stub — see openosint/graph/store/neighbors.py for the full contract."""
 
