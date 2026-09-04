@@ -94,6 +94,7 @@ graph-dedup = [
     "nomenklatura>=4.14.0; python_version>='3.11'",
 ]
 stix = [
+    "followthemoney>=4.10.0",
     "stix2>=3.0.0",
 ]
 web = [
