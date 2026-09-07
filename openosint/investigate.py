@@ -168,8 +168,10 @@ class InvestigationBudget:
 async def investigate(
     target: str,
     *,
-    kind: EntityKind | Literal["auto", "email", "username", "domain", "ip",
-                                "phone", "hash", "url", "person"] = EntityKind.AUTO,
+    kind: EntityKind
+    | Literal[
+        "auto", "email", "username", "domain", "ip", "phone", "hash", "url", "person"
+    ] = EntityKind.AUTO,
     budget: InvestigationBudget | None = None,
     run_id: str = "",
 ) -> "openosint.correlation.EntityGraph":  # noqa: F821 — forward ref, not imported at module level
@@ -213,9 +215,7 @@ async def investigate(
             kind = EntityKind(kind.lower())
         except ValueError:
             valid = [e.value for e in EntityKind]
-            raise ValueError(
-                f"Unknown kind {kind!r}. Valid values: {valid}"
-            )
+            raise ValueError(f"Unknown kind {kind!r}. Valid values: {valid}")
 
     if budget is None:
         budget = InvestigationBudget.default()

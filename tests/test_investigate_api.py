@@ -17,7 +17,6 @@ from openosint.investigate import (
     investigate,
 )
 
-
 # ---------------------------------------------------------------------------
 # InvestigationBudget
 # ---------------------------------------------------------------------------
@@ -40,7 +39,9 @@ class TestInvestigationBudget:
         assert b.max_depth >= 3
 
     def test_custom_values(self):
-        b = InvestigationBudget(max_depth=5, max_entities=100, max_tool_calls=200, timeout_seconds=60)
+        b = InvestigationBudget(
+            max_depth=5, max_entities=100, max_tool_calls=200, timeout_seconds=60
+        )
         assert b.max_depth == 5
 
     def test_negative_depth_raises(self):
@@ -139,7 +140,9 @@ class TestInvestigateReturnType:
     async def test_auto_kind_passes_budget_knobs(self):
         from openosint.correlation import EntityGraph
 
-        budget = InvestigationBudget(max_depth=3, max_entities=50, max_tool_calls=70, timeout_seconds=45)
+        budget = InvestigationBudget(
+            max_depth=3, max_entities=50, max_tool_calls=70, timeout_seconds=45
+        )
         with patch("openosint.pivot.investigate_graph", new_callable=AsyncMock) as mock_ig:
             mock_ig.return_value = EntityGraph()
             await investigate("example.com", budget=budget)
@@ -255,6 +258,7 @@ class TestInvestigateReturnType:
                 budget=InvestigationBudget.conservative(),
             )
         from openosint.correlation import EntityGraph
+
         assert isinstance(graph, EntityGraph)
 
     @pytest.mark.asyncio
@@ -293,6 +297,7 @@ async def test_investigate_result_exportable_to_stix():
 
     bundle = to_stix_bundle(graph)
     import json
+
     parsed = json.loads(bundle.serialize())
     assert parsed["type"] == "bundle"
     # domain-name SCO must be present
