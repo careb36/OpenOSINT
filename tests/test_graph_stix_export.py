@@ -12,7 +12,9 @@ import json
 
 import pytest
 
-pytest.importorskip("stix2", reason="requires the 'stix' extra: pip install openosint[stix]")
+stix2 = pytest.importorskip(
+    "stix2", reason="requires the 'stix' extra: pip install openosint[stix]"
+)
 
 from openosint.correlation import (  # noqa: E402
     EntityGraph,
@@ -358,6 +360,123 @@ class TestIdempotency:
         id1 = next(o["id"] for o in objs1 if o["type"] == "ipv4-addr")
         id2 = next(o["id"] for o in objs2 if o["type"] == "ipv4-addr")
         assert id1 == id2
+
+    def test_bundle_id_is_stable_for_same_graph(self):
+        e = make_entity(EntityType.DOMAIN, "example.com", 1.0)
+        g = _graph_with(e)
+        b1 = json.loads(to_stix_bundle(g).serialize())
+        b2 = json.loads(to_stix_bundle(g).serialize())
+        assert b1["id"] == b2["id"]
+        assert b1["id"].startswith("bundle--")
+
+    def test_bundle_id_changes_for_different_graphs(self):
+        g1 = _graph_with(make_entity(EntityType.DOMAIN, "example.com", 1.0))
+        g2 = _graph_with(make_entity(EntityType.DOMAIN, "example.org", 1.0))
+        b1 = json.loads(to_stix_bundle(g1).serialize())
+        b2 = json.loads(to_stix_bundle(g2).serialize())
+        assert b1["id"] != b2["id"]
+
+
+class TestScoSpecIds:
+    def test_domain_id_matches_stix2(self):
+        e = make_entity(EntityType.DOMAIN, "example.com", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "domain-name")
+        assert sco["id"] == stix2.DomainName(value="example.com").id
+
+    def test_email_id_matches_stix2(self):
+        e = make_entity(EntityType.EMAIL, "admin@example.com", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "email-addr")
+        assert sco["id"] == stix2.EmailAddress(value="admin@example.com").id
+
+    def test_user_account_id_matches_stix2(self):
+        e = make_entity(EntityType.USERNAME, "alice", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "user-account")
+        assert sco["id"] == stix2.UserAccount(user_id="alice", account_type="generic").id
+
+    def test_ipv4_id_matches_stix2(self):
+        e = make_entity(EntityType.IP, "93.184.216.34", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "ipv4-addr")
+        assert sco["id"] == stix2.IPv4Address(value="93.184.216.34").id
+
+    def test_ipv6_id_matches_stix2(self):
+        e = make_entity(EntityType.IP, "2001:db8::1", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "ipv6-addr")
+        assert sco["id"] == stix2.IPv6Address(value="2001:db8::1").id
+
+    def test_url_id_matches_stix2(self):
+        value = "https://example.com/a"
+        e = make_entity(EntityType.URL, value, 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "url")
+        assert sco["id"] == stix2.URL(value=value).id
+
+    def test_file_id_matches_stix2(self):
+        h = "a" * 64
+        e = make_entity(EntityType.HASH, h, 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "file")
+        assert sco["id"] == stix2.File(hashes={"SHA-256": h}).id
+
+    def test_asn_id_matches_stix2(self):
+        e = make_entity(EntityType.ASN, "15169", 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "autonomous-system")
+        assert sco["id"] == stix2.AutonomousSystem(number=15169).id
+
+    def test_ids_recomputable_from_emitted_values(self):
+        g = _graph_with(
+            make_entity(EntityType.DOMAIN, "example.com", 1.0),
+            make_entity(EntityType.EMAIL, "admin@example.com", 1.0),
+            make_entity(EntityType.USERNAME, "alice", 1.0),
+            make_entity(EntityType.IP, "93.184.216.34", 1.0),
+            make_entity(EntityType.IP, "2001:db8::1", 1.0),
+            make_entity(EntityType.URL, "https://example.com/a", 1.0),
+        )
+        objs = _bundle_objects(g)
+        domain = next(o for o in objs if o["type"] == "domain-name")
+        email = next(o for o in objs if o["type"] == "email-addr")
+        user = next(o for o in objs if o["type"] == "user-account")
+        ipv4 = next(o for o in objs if o["type"] == "ipv4-addr")
+        ipv6 = next(o for o in objs if o["type"] == "ipv6-addr")
+        url = next(o for o in objs if o["type"] == "url")
+        assert domain["id"] == stix2.DomainName(value=domain["value"]).id
+        assert email["id"] == stix2.EmailAddress(value=email["value"]).id
+        assert user["id"] == stix2.UserAccount(
+            user_id=user["user_id"], account_type=user["account_type"]
+        ).id
+        assert ipv4["id"] == stix2.IPv4Address(value=ipv4["value"]).id
+        assert ipv6["id"] == stix2.IPv6Address(value=ipv6["value"]).id
+        assert url["id"] == stix2.URL(value=url["value"]).id
+
+    def test_normalization_variants_emit_same_id_and_value(self):
+        domain_upper = make_entity(EntityType.DOMAIN, "Example.COM", 1.0)
+        domain_lower = make_entity(EntityType.DOMAIN, "example.com", 1.0)
+        email_upper = make_entity(EntityType.EMAIL, "ADMIN@EXAMPLE.COM", 1.0)
+        email_lower = make_entity(EntityType.EMAIL, "admin@example.com", 1.0)
+        user_upper = make_entity(EntityType.USERNAME, "ALICE", 1.0)
+        user_lower = make_entity(EntityType.USERNAME, "alice", 1.0)
+        objs = _bundle_objects(
+            _graph_with(
+                domain_upper,
+                domain_lower,
+                email_upper,
+                email_lower,
+                user_upper,
+                user_lower,
+            )
+        )
+        domain = next(o for o in objs if o["type"] == "domain-name")
+        email = next(o for o in objs if o["type"] == "email-addr")
+        user = next(o for o in objs if o["type"] == "user-account")
+        assert domain["value"] == "example.com"
+        assert domain["id"] == stix2.DomainName(value="example.com").id
+        assert email["value"] == "admin@example.com"
+        assert email["id"] == stix2.EmailAddress(value="admin@example.com").id
+        assert user["user_id"] == "alice"
+        assert user["id"] == stix2.UserAccount(user_id="alice", account_type="generic").id
+
+    def test_url_preserves_scheme(self):
+        value = "https://example.com/a"
+        e = make_entity(EntityType.URL, value, 1.0)
+        sco = next(o for o in _bundle_objects(_graph_with(e)) if o["type"] == "url")
+        assert sco["value"] == value
 
 
 # ---------------------------------------------------------------------------
