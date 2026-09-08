@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import hmac
+import hashlib
 import logging
 import os
 import time
@@ -27,16 +27,16 @@ router = APIRouter()
 
 _ERROR_PREFIXES = ("Scan error", "Internal error", "Error:")
 _CONTACT_MESSAGE = "No credits remaining. Contact commercial@openosint.tech for access."
-_LOG_ID_SALT: bytes = os.urandom(16)
+_LOG_ID_SALT: bytes = os.urandom(32)
 
 
 def _customer_log_id(api_key: str) -> str:
     """Return a process-local pseudonymous identifier for request logging.
 
-    Uses HMAC-SHA256 with a random per-process salt so raw API keys are never
-    retained in memory and the mapping cannot be reversed across process restarts.
+    Uses a keyed BLAKE2b digest with a random per-process salt so raw API keys
+    are never retained in memory and the mapping cannot be reversed.
     """
-    digest = hmac.digest(_LOG_ID_SALT, api_key.encode(), "sha256").hex()[:12]
+    digest = hashlib.blake2b(api_key.encode(), key=_LOG_ID_SALT, digest_size=6).hexdigest()
     return f"customer-{digest}"
 
 
