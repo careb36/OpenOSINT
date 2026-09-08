@@ -35,14 +35,12 @@ from cloud.tools import ALLOW_LIST as _ALLOW_LIST
 @pytest.fixture(autouse=True)
 def reset_memory_store():
     """Clear in-memory state before each test to prevent cross-test pollution."""
-    from cloud.routes import enrich as enrich_routes
-
     db._MEMORY_CUSTOMERS.clear()
     db._MEMORY_USERS.clear()
     db._MEMORY_USERS_BY_IDENTITY.clear()
     db._next_user_id = 1
     keys._MEMORY_KEYS.clear()
-    enrich_routes._LOG_IDS.clear()
+    # enrich_routes no longer uses a mutable _LOG_IDS dict; no reset needed
     # Reset cached Fernet so tests always get a fresh ephemeral key
     keys._fernet = None
     yield

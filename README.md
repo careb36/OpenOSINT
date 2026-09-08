@@ -77,7 +77,7 @@ Use the public Python API directly from your own code:
 ```python
 import asyncio
 
-from openosint.investigate import investigate
+from openosint import investigate
 
 graph = asyncio.run(investigate("example.com"))
 ```

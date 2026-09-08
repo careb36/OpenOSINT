@@ -129,7 +129,7 @@ def _entity_to_stix(entity: "Any") -> dict[str, Any] | None:
     """
     from openosint.correlation import EntityType
 
-    raw_value = entity.value
+    raw_value = entity.value.strip()
     conf = _confidence_int(entity.confidence)
     labels = sorted(entity.source_tools) if entity.source_tools else []
     common: dict[str, Any] = {

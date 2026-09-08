@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
+import os
 import time
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,16 +27,17 @@ router = APIRouter()
 
 _ERROR_PREFIXES = ("Scan error", "Internal error", "Error:")
 _CONTACT_MESSAGE = "No credits remaining. Contact commercial@openosint.tech for access."
-_LOG_IDS: dict[str, str] = {}
+_LOG_ID_SALT: bytes = os.urandom(16)
 
 
 def _customer_log_id(api_key: str) -> str:
-    """Return a process-local pseudonymous identifier for request logging."""
-    customer_log_id = _LOG_IDS.get(api_key)
-    if customer_log_id is None:
-        customer_log_id = f"customer-{len(_LOG_IDS) + 1}"
-        _LOG_IDS[api_key] = customer_log_id
-    return customer_log_id
+    """Return a process-local pseudonymous identifier for request logging.
+
+    Uses a salted SHA-256 hash so raw API keys are never retained in memory
+    and the mapping cannot be reversed across process restarts.
+    """
+    digest = hashlib.sha256(_LOG_ID_SALT + api_key.encode()).hexdigest()[:12]
+    return f"customer-{digest}"
 
 
 def _log_outcome(tool: str, customer_log_id: str, status: str, elapsed: float) -> None:

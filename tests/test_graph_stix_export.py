@@ -472,6 +472,16 @@ class TestScoSpecIds:
         assert user["user_id"] == "alice"
         assert user["id"] == stix2.UserAccount(user_id="alice", account_type="generic").id
 
+    def test_whitespace_stripped_produces_same_id_as_clean_value(self):
+        padded = make_entity(EntityType.DOMAIN, "  example.com ", 1.0)
+        clean = make_entity(EntityType.DOMAIN, "example.com", 1.0)
+        objs_padded = _bundle_objects(_graph_with(padded))
+        objs_clean = _bundle_objects(_graph_with(clean))
+        sco_padded = next(o for o in objs_padded if o["type"] == "domain-name")
+        sco_clean = next(o for o in objs_clean if o["type"] == "domain-name")
+        assert sco_padded["id"] == sco_clean["id"]
+        assert sco_padded["value"] == "example.com"
+
     def test_url_preserves_scheme(self):
         value = "https://example.com/a"
         e = make_entity(EntityType.URL, value, 1.0)
