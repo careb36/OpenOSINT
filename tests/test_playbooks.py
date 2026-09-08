@@ -110,9 +110,7 @@ class TestPlaybookLoader:
         assert recipe.label == "Domain Investigation"
         assert recipe.target_type == "domain"
         assert len(recipe.steps) == 5
-        assert [s.id for s in recipe.steps] == [
-            "whois", "dns", "dorks", "subdomains", "footprint"
-        ]
+        assert [s.id for s in recipe.steps] == ["whois", "dns", "dorks", "subdomains", "footprint"]
 
     def test_raises_on_unknown_recipe(self):
         import pytest
@@ -257,9 +255,7 @@ class TestPlaybookRunner:
         assert "ℹ️ Skipped" in content
         assert "⚠ Step error" not in content
 
-    async def test_not_configured_footprint_includes_brightdata_note(
-        self, tmp_path, monkeypatch
-    ):
+    async def test_not_configured_footprint_includes_brightdata_note(self, tmp_path, monkeypatch):
         monkeypatch.delenv("BRIGHTDATA_API_KEY", raising=False)
         monkeypatch.delenv("BRIGHTDATA_SERP_ZONE", raising=False)
 
@@ -368,8 +364,9 @@ class TestPlaybookRunner:
 
         recipe = load_recipe("domain")
         pdf_mock = AsyncMock(return_value=None)
-        with patch.dict(TOOL_MAP, _make_tool_mocks()), patch(
-            "openosint.pdf_report.generate_pdf_report", pdf_mock
+        with (
+            patch.dict(TOOL_MAP, _make_tool_mocks()),
+            patch("openosint.pdf_report.generate_pdf_report", pdf_mock),
         ):
             await run_playbook(recipe, "example.com", is_pdf_disabled=True, reports_dir=tmp_path)
 
@@ -382,8 +379,9 @@ class TestPlaybookRunner:
         recipe = load_recipe("domain")
         pdf_mock = AsyncMock(return_value=None)
         # Patch at the source module so the local import inside run_playbook picks it up.
-        with patch.dict(TOOL_MAP, _make_tool_mocks()), patch(
-            "openosint.pdf_report.generate_pdf_report", pdf_mock
+        with (
+            patch.dict(TOOL_MAP, _make_tool_mocks()),
+            patch("openosint.pdf_report.generate_pdf_report", pdf_mock),
         ):
             await run_playbook(recipe, "example.com", is_pdf_disabled=False, reports_dir=tmp_path)
 
@@ -402,9 +400,9 @@ class TestPlaybookRunner:
                 recipe, "example.com", is_pdf_disabled=True, reports_dir=tmp_path
             )
 
-        assert re.match(
-            r"\d{4}-\d{2}-\d{2}_.*_domain_report\.md", report_path.name
-        ), f"Unexpected filename: {report_path.name}"
+        assert re.match(r"\d{4}-\d{2}-\d{2}_.*_domain_report\.md", report_path.name), (
+            f"Unexpected filename: {report_path.name}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -457,14 +455,9 @@ _PASTE_OUTPUT = (
     "[+] https://pastebin.com/def456 (2024-02-20)\n"
 )
 _USER_OUTPUT = (
-    "[+] Twitter: https://twitter.com/johndoe99\n"
-    "[+] GitHub: https://github.com/johndoe99\n"
+    "[+] Twitter: https://twitter.com/johndoe99\n[+] GitHub: https://github.com/johndoe99\n"
 )
-_HOLEHE_OUTPUT = (
-    "[+] twitter.com\n"
-    "[+] github.com\n"
-    "[-] facebook.com\n"
-)
+_HOLEHE_OUTPUT = "[+] twitter.com\n[+] github.com\n[-] facebook.com\n"
 
 _IP_CANNED = {
     "search_ip": _IP_OUTPUT,
@@ -569,9 +562,9 @@ class TestIPPlaybook:
                 recipe, "1.2.3.4", is_pdf_disabled=True, reports_dir=tmp_path
             )
 
-        assert re.match(
-            r"\d{4}-\d{2}-\d{2}_.*_ip_report\.md", report_path.name
-        ), f"Unexpected filename: {report_path.name}"
+        assert re.match(r"\d{4}-\d{2}-\d{2}_.*_ip_report\.md", report_path.name), (
+            f"Unexpected filename: {report_path.name}"
+        )
 
     async def test_ip_cold_start_no_crash(self, tmp_path, monkeypatch):
         monkeypatch.delenv("SHODAN_API_KEY", raising=False)
@@ -727,9 +720,9 @@ class TestPersonPlaybook:
                 recipe, "johndoe99", is_pdf_disabled=True, reports_dir=tmp_path
             )
 
-        assert re.match(
-            r"\d{4}-\d{2}-\d{2}_.*_person_report\.md", report_path.name
-        ), f"Unexpected filename: {report_path.name}"
+        assert re.match(r"\d{4}-\d{2}-\d{2}_.*_person_report\.md", report_path.name), (
+            f"Unexpected filename: {report_path.name}"
+        )
 
     async def test_person_cold_start_no_crash(self, tmp_path, monkeypatch):
         import shutil as _shutil

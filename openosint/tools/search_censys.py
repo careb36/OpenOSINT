@@ -118,7 +118,9 @@ def _format_domain_result(results: list, domain: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def run_censys_osint(target: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_keys: dict[str, str] | None = None) -> str:
+async def run_censys_osint(
+    target: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_keys: dict[str, str] | None = None
+) -> str:
     """
     Run a Censys lookup for *target*.
 
@@ -157,7 +159,9 @@ async def run_censys_osint(target: str, timeout_seconds: int = _DEFAULT_TIMEOUT,
 
     try:
         if _is_ip_address(target):
-            hosts = CensysHosts(api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies())
+            hosts = CensysHosts(
+                api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies()
+            )
             data = await asyncio.wait_for(
                 asyncio.to_thread(hosts.view, target),
                 timeout=float(timeout_seconds),
@@ -167,7 +171,9 @@ async def run_censys_osint(target: str, timeout_seconds: int = _DEFAULT_TIMEOUT,
             try:
                 from censys.search import CensysCerts  # type: ignore
 
-                certs = CensysCerts(api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies())
+                certs = CensysCerts(
+                    api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies()
+                )
                 query = f"parsed.names: {target}"
                 search_results: list = await asyncio.wait_for(
                     asyncio.to_thread(
@@ -187,7 +193,9 @@ async def run_censys_osint(target: str, timeout_seconds: int = _DEFAULT_TIMEOUT,
                     timeout=float(timeout_seconds),
                 )
             except ImportError:
-                hosts = CensysHosts(api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies())
+                hosts = CensysHosts(
+                    api_id=api_id, api_secret=api_secret, proxies=get_requests_proxies()
+                )
                 search_results = await asyncio.wait_for(
                     asyncio.to_thread(
                         lambda: list(

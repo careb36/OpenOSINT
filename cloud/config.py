@@ -4,6 +4,7 @@ OpenOSINT Cloud — environment configuration.
 All secrets and tunable values come from environment variables.
 Never hardcode values here.
 """
+
 from __future__ import annotations
 
 import os
@@ -15,11 +16,11 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 # ── OAuth (web dashboard login — GitHub / Google) ─────────────────────────────
 # X-API-Key / MCP bearer auth never uses these; this is purely a login layer
 # on top of the existing api_key model (see cloud/oauth.py, cloud/routes/oauth.py).
-GITHUB_CLIENT_ID     = os.environ.get("GITHUB_CLIENT_ID", "")
+GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
-GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-SESSION_SECRET_KEY   = os.environ.get("SESSION_SECRET_KEY", "")
+SESSION_SECRET_KEY = os.environ.get("SESSION_SECRET_KEY", "")
 
 
 def resolve_session_secret() -> str:
@@ -34,9 +35,10 @@ def resolve_session_secret() -> str:
     if DATABASE_URL:
         raise RuntimeError(
             "SESSION_SECRET_KEY is required when DATABASE_URL is set. "
-            "Generate: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            'Generate: python -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
     return secrets.token_urlsafe(32)
+
 
 # ── Limits ────────────────────────────────────────────────────────────────────
 # Heroku's HTTP router kills requests that don't return the first byte within
@@ -67,7 +69,7 @@ USAGE_METADATA_RETENTION_DAYS: int = 365
 # ── Plan definitions ──────────────────────────────────────────────────────────
 # Credits granted when a customer purchases / activates a plan.
 PLAN_CREDITS: dict[str, int] = {
-    "payg":    100,   # $10 pack → 100 calls @ $0.10/call
-    "starter": 1_000, # $19/mo
-    "pro":     5_000, # $49/mo
+    "payg": 100,  # $10 pack → 100 calls @ $0.10/call
+    "starter": 1_000,  # $19/mo
+    "pro": 5_000,  # $49/mo
 }

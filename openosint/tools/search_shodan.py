@@ -79,7 +79,9 @@ def _format_search(results: dict, query: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def run_shodan_osint(query: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None) -> str:
+async def run_shodan_osint(
+    query: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None
+) -> str:
     """
     Run a Shodan lookup for *query*.
 

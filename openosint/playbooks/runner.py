@@ -255,7 +255,7 @@ def _format_dns(output: str) -> str:
             col_idx = item.find(":")
             if col_idx > 0:
                 sel = item[:col_idx].strip()
-                rest = item[col_idx + 1:].strip()
+                rest = item[col_idx + 1 :].strip()
                 m = re.search(r"p=([^\s;]*)", rest)
                 status = "Revoked / not published" if (m and not m.group(1)) else "Active"
             else:
@@ -418,7 +418,7 @@ def _format_virustotal(output: str) -> str:
     for line in output.splitlines():
         stripped = line.strip()
         if stripped.startswith("[VirusTotal] ") and ": " in stripped:
-            content = stripped[len("[VirusTotal] "):]
+            content = stripped[len("[VirusTotal] ") :]
             key, _, value = content.partition(": ")
             rows.append((key.strip(), value.strip()))
     if not rows:
@@ -585,9 +585,7 @@ def _build_observations(
     dkim_items = _parse_dns_bullets(dns_out, "[DNS] DKIM selectors found:")
     if dkim_items:
         empty = sum(
-            1
-            for item in dkim_items
-            if (dm := re.search(r"p=([^\s;]*)", item)) and not dm.group(1)
+            1 for item in dkim_items if (dm := re.search(r"p=([^\s;]*)", item)) and not dm.group(1)
         )
         active = len(dkim_items) - empty
         total = len(dkim_items)
@@ -641,9 +639,7 @@ def _build_observations(
                         f"({age_days} days ago — recently registered)"
                     )
                 else:
-                    notes.append(
-                        f"**Domain age:** registered {created.strftime('%Y-%m-%d')}"
-                    )
+                    notes.append(f"**Domain age:** registered {created.strftime('%Y-%m-%d')}")
             except ValueError:
                 pass
             break
@@ -742,9 +738,7 @@ def _build_summary(
         lines.append(f"- **ASNs identified:** {ip_asns}")
 
     # Hostnames from Shodan
-    shodan_hostnames = len(
-        tool_entities.get("search_shodan", {}).get(EntityType.DOMAIN, set())
-    )
+    shodan_hostnames = len(tool_entities.get("search_shodan", {}).get(EntityType.DOMAIN, set()))
     if shodan_hostnames:
         lines.append(f"- **Hostnames from Shodan:** {shodan_hostnames}")
 
@@ -852,15 +846,12 @@ async def run_playbook(
     be created or the report file cannot be written — the caller is responsible
     for handling filesystem-level errors.
     """
-    from openosint.playbooks.loader import Recipe  # local import to avoid circular
 
     reports_path = reports_dir or Path("reports")
     try:
         reports_path.mkdir(exist_ok=True)
     except OSError as exc:
-        raise OSError(
-            f"Cannot create reports directory '{reports_path}': {exc}"
-        ) from exc
+        raise OSError(f"Cannot create reports directory '{reports_path}': {exc}") from exc
 
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     date_prefix = datetime.now(timezone.utc).strftime("%Y-%m-%d")

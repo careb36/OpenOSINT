@@ -1,4 +1,5 @@
 """FastAPI dependency that validates X-API-Key and returns the Customer."""
+
 from __future__ import annotations
 
 from fastapi import HTTPException, Security

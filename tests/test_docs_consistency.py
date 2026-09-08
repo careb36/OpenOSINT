@@ -273,6 +273,6 @@ def test_legal_docs_match_their_html_mirror():
             at = next((i for i in range(n) if md_words[i] != html_words[i]), n)
             mismatches.append(
                 f"{md_rel} <-> {html_rel} diverge at word {at}: "
-                f"{md_words[max(0, at - 6):at + 6]!r} vs {html_words[max(0, at - 6):at + 6]!r}"
+                f"{md_words[max(0, at - 6) : at + 6]!r} vs {html_words[max(0, at - 6) : at + 6]!r}"
             )
     assert not mismatches, "legal doc / HTML mirror drift:\n" + "\n".join(mismatches)

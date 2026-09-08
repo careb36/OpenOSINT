@@ -26,7 +26,12 @@ sm = _load_module()
 # Fixtures — canned API responses
 # ---------------------------------------------------------------------------
 
-_REPO_RESPONSE = {"stargazers_count": 120, "forks_count": 30, "subscribers_count": 8, "watchers_count": 120}
+_REPO_RESPONSE = {
+    "stargazers_count": 120,
+    "forks_count": 30,
+    "subscribers_count": 8,
+    "watchers_count": 120,
+}
 _VIEWS_RESPONSE = {
     "count": 100,
     "uniques": 40,
@@ -117,14 +122,20 @@ def test_fetch_traffic_views_normalizes_daily(monkeypatch):
 def test_fetch_pypi_downloads(monkeypatch):
     monkeypatch.setattr(sm.requests, "get", _fake_get_factory())
     downloads = sm.fetch_pypi_downloads("repo")
-    assert downloads == {"downloads_last_day": 5, "downloads_last_week": 40, "downloads_last_month": 200}
+    assert downloads == {
+        "downloads_last_day": 5,
+        "downloads_last_week": 40,
+        "downloads_last_month": 200,
+    }
 
 
 def test_collect_snapshot_shape(monkeypatch):
     monkeypatch.setattr(sm.requests, "get", _fake_get_factory())
     snapshot = sm.collect_snapshot("Org/Repo", "tok")
     assert snapshot["github"]["stars"] == 120
-    assert snapshot["github"]["traffic"]["referrers"] == [{"referrer": "github.com", "count": 50, "uniques": 20}]
+    assert snapshot["github"]["traffic"]["referrers"] == [
+        {"referrer": "github.com", "count": 50, "uniques": 20}
+    ]
     assert snapshot["pypi"]["downloads_last_month"] == 200
 
 
@@ -178,7 +189,10 @@ def test_render_report_single_snapshot_no_network(tmp_path, monkeypatch):
     monkeypatch.setattr(sm.requests, "get", _refusing_get)
     snapshot = {
         "date": "2026-07-25",
-        "github": {"stars": 42, "traffic": {"referrers": [{"referrer": "google.com", "count": 9, "uniques": 3}]}},
+        "github": {
+            "stars": 42,
+            "traffic": {"referrers": [{"referrer": "google.com", "count": 9, "uniques": 3}]},
+        },
         "pypi": {"downloads_last_month": 300},
         "trailing_30_days": {"views": {"count": 100, "unique_days_sum": 40}},
     }
@@ -219,7 +233,9 @@ def test_render_report_shows_growth_with_prior_snapshot(tmp_path):
 def test_main_collect_missing_token_exits_without_network(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sm.requests, "get", _refusing_get)
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.setattr(sys, "argv", ["sponsor_metrics.py", "--repo", "Org/Repo", "--out-dir", str(tmp_path)])
+    monkeypatch.setattr(
+        sys, "argv", ["sponsor_metrics.py", "--repo", "Org/Repo", "--out-dir", str(tmp_path)]
+    )
 
     with pytest.raises(SystemExit) as exc_info:
         sm.main()
@@ -232,7 +248,15 @@ def test_main_collect_writes_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["sponsor_metrics.py", "--repo", "Org/Repo", "--out-dir", str(tmp_path), "--date", "2026-07-25"],
+        [
+            "sponsor_metrics.py",
+            "--repo",
+            "Org/Repo",
+            "--out-dir",
+            str(tmp_path),
+            "--date",
+            "2026-07-25",
+        ],
     )
 
     sm.main()
@@ -247,7 +271,15 @@ def test_main_collect_writes_snapshot(tmp_path, monkeypatch):
 def test_main_collect_refuses_overwrite_without_force(tmp_path, monkeypatch):
     monkeypatch.setattr(sm.requests, "get", _fake_get_factory())
     monkeypatch.setenv("GITHUB_TOKEN", "tok")
-    argv = ["sponsor_metrics.py", "--repo", "Org/Repo", "--out-dir", str(tmp_path), "--date", "2026-07-25"]
+    argv = [
+        "sponsor_metrics.py",
+        "--repo",
+        "Org/Repo",
+        "--out-dir",
+        str(tmp_path),
+        "--date",
+        "2026-07-25",
+    ]
     monkeypatch.setattr(sys, "argv", argv)
     sm.main()
 
@@ -259,7 +291,15 @@ def test_main_collect_refuses_overwrite_without_force(tmp_path, monkeypatch):
 def test_main_collect_force_overwrites(tmp_path, monkeypatch):
     monkeypatch.setattr(sm.requests, "get", _fake_get_factory())
     monkeypatch.setenv("GITHUB_TOKEN", "tok")
-    base_argv = ["sponsor_metrics.py", "--repo", "Org/Repo", "--out-dir", str(tmp_path), "--date", "2026-07-25"]
+    base_argv = [
+        "sponsor_metrics.py",
+        "--repo",
+        "Org/Repo",
+        "--out-dir",
+        str(tmp_path),
+        "--date",
+        "2026-07-25",
+    ]
     monkeypatch.setattr(sys, "argv", base_argv)
     sm.main()
 

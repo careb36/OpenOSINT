@@ -88,6 +88,7 @@ class PlaybookStep:
     tool: str
     section: str
 
+
 @dataclass(frozen=True)
 class Recipe:
     name: str
@@ -131,9 +132,9 @@ Each step produces one of three states — never a pass/fail binary:
 
 ```python
 class StepState(Enum):
-    NOT_CONFIGURED = "not_configured"   # required env var or binary absent
-    EMPTY          = "empty"            # tool ran, returned no output
-    ERROR          = "error"            # unexpected exception
+    NOT_CONFIGURED = "not_configured"  # required env var or binary absent
+    EMPTY = "empty"  # tool ran, returned no output
+    ERROR = "error"  # unexpected exception
     # (implicit SUCCESS: tool ran and returned non-empty output)
 ```
 
@@ -151,20 +152,23 @@ NOT_CONFIGURED and the tool is **not called**.
 ```python
 # Each entry: (env_vars: list[str], binaries: list[str], note: str | None)
 TOOL_REQUIREMENTS: dict[str, tuple[list[str], list[str], str | None]] = {
-    "search_whois":      ([], [], None),
-    "search_dns":        ([], [], None),
-    "generate_dorks":    ([], [], None),
-    "search_domain":     ([], ["sublist3r"], None),
-    "search_footprint":  (["BRIGHTDATA_API_KEY", "BRIGHTDATA_SERP_ZONE"], [],
-                          "Sign up at brightdata.com to obtain your API key and SERP zone."),
-    "search_email":      ([], ["holehe"], None),
-    "search_breach":     (["HIBP_API_KEY"], [], None),
-    "search_ip":         ([], [], None),                  # IPINFO_TOKEN optional
-    "search_shodan":     (["SHODAN_API_KEY"], [], None),
+    "search_whois": ([], [], None),
+    "search_dns": ([], [], None),
+    "generate_dorks": ([], [], None),
+    "search_domain": ([], ["sublist3r"], None),
+    "search_footprint": (
+        ["BRIGHTDATA_API_KEY", "BRIGHTDATA_SERP_ZONE"],
+        [],
+        "Sign up at brightdata.com to obtain your API key and SERP zone.",
+    ),
+    "search_email": ([], ["holehe"], None),
+    "search_breach": (["HIBP_API_KEY"], [], None),
+    "search_ip": ([], [], None),  # IPINFO_TOKEN optional
+    "search_shodan": (["SHODAN_API_KEY"], [], None),
     "search_virustotal": (["VIRUSTOTAL_API_KEY"], [], None),
-    "search_paste":      ([], [], None),
-    "search_username":   ([], ["sherlock"], None),
-    "search_phone":      ([], ["phoneinfoga"], None),
+    "search_paste": ([], [], None),
+    "search_username": ([], ["sherlock"], None),
+    "search_phone": ([], ["phoneinfoga"], None),
 }
 ```
 
@@ -174,19 +178,19 @@ TOOL_REQUIREMENTS: dict[str, tuple[list[str], list[str], str | None]] = {
 
 ```python
 TOOL_MAP: dict[str, Callable[..., Awaitable[str]]] = {
-    "search_whois":      run_whois_osint,
-    "search_dns":        run_dns_osint,
-    "generate_dorks":    run_dork_osint,
-    "search_domain":     run_domain_osint,
-    "search_footprint":  run_footprint_osint,
-    "search_email":      run_email_osint,
-    "search_breach":     run_breach_osint,
-    "search_ip":         run_ip_osint,
-    "search_shodan":     run_shodan_osint,
+    "search_whois": run_whois_osint,
+    "search_dns": run_dns_osint,
+    "generate_dorks": run_dork_osint,
+    "search_domain": run_domain_osint,
+    "search_footprint": run_footprint_osint,
+    "search_email": run_email_osint,
+    "search_breach": run_breach_osint,
+    "search_ip": run_ip_osint,
+    "search_shodan": run_shodan_osint,
     "search_virustotal": run_virustotal_osint,
-    "search_paste":      run_paste_osint,
-    "search_username":   run_username_osint,
-    "search_phone":      run_phone_osint,
+    "search_paste": run_paste_osint,
+    "search_username": run_username_osint,
+    "search_phone": run_phone_osint,
 }
 ```
 

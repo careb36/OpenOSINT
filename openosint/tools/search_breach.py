@@ -107,7 +107,9 @@ async def run_breach_osint(
     resolved_key = api_key or os.environ.get("HIBP_API_KEY", "")
     logger.info("Starting breach check for: %s", email)
     try:
-        breaches = await asyncio.to_thread(_fetch_hibp_breaches, email, timeout_seconds, resolved_key)
+        breaches = await asyncio.to_thread(
+            _fetch_hibp_breaches, email, timeout_seconds, resolved_key
+        )
         result = _format_breach_results(breaches, email)
         logger.info("Breach check complete for: %s", email)
         return result

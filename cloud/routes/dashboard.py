@@ -12,6 +12,7 @@ Access is invite-only (contact commercial@openosint.tech) — there is no
 self-serve checkout. A customer_api_key is provisioned by hand and linked
 here via the "link an existing key" form below.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -52,14 +53,17 @@ document.getElementById("link-key-form").addEventListener("submit", async (e) =>
 </script>
 """
 
-_DASHBOARD_HTML = """<!doctype html>
+_DASHBOARD_HTML = (
+    """<!doctype html>
 <html>
 <head><meta charset="utf-8"><title>OpenOSINT Cloud — Dashboard</title></head>
 <body>
 <h1>Dashboard</h1>
 <p id="account">Loading account…</p>
 <p>Need access or more credits? Email <a href="mailto:commercial@openosint.tech">commercial@openosint.tech</a>.</p>
-""" + LINK_KEY_SECTION_HTML + """
+"""
+    + LINK_KEY_SECTION_HTML
+    + """
 <script>
 async function loadAccount() {
   const resp = await fetch("/v1/me");
@@ -80,6 +84,7 @@ async function loadAccount() {
 </script>
 </body>
 </html>"""
+)
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
