@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
+import hmac
 import logging
 import os
 import time
@@ -33,10 +33,10 @@ _LOG_ID_SALT: bytes = os.urandom(16)
 def _customer_log_id(api_key: str) -> str:
     """Return a process-local pseudonymous identifier for request logging.
 
-    Uses a salted SHA-256 hash so raw API keys are never retained in memory
-    and the mapping cannot be reversed across process restarts.
+    Uses HMAC-SHA256 with a random per-process salt so raw API keys are never
+    retained in memory and the mapping cannot be reversed across process restarts.
     """
-    digest = hashlib.sha256(_LOG_ID_SALT + api_key.encode()).hexdigest()[:12]
+    digest = hmac.digest(_LOG_ID_SALT, api_key.encode(), "sha256").hex()[:12]
     return f"customer-{digest}"
 
 
