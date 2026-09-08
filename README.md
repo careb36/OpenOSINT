@@ -72,6 +72,31 @@ _Open: Breach / Compromised-Credential Data · Email / Identity Lookup — see [
 pip install openosint
 ```
 
+Use the public Python API directly from your own code:
+
+```python
+import asyncio
+
+from openosint import investigate
+
+graph = asyncio.run(investigate("example.com"))
+```
+
+Need STIX 2.1 export for OpenCTI or another TIP?
+
+```bash
+pip install "openosint[stix]"
+```
+
+`openosint[stix]` also installs `followthemoney`, which may require `pkg-config`
+and `libicu-dev` on Linux/Docker images because of `PyICU`.
+
+```python
+from openosint.graph.export.stix import to_stix_json
+
+print(to_stix_json(graph))
+```
+
 **Paid:** [Complete Kit — $55](https://tommasodev.gumroad.com/l/ai-osint-complete-kit?utm_source=github&utm_medium=readme&utm_campaign=complete_kit) (prompts + playbook, bundled) · [Setup Sprint — $350](https://tommasodev.gumroad.com/l/osint-mcp-setup-sprint?utm_source=github&utm_medium=readme&utm_campaign=setup_sprint) (done-for-you install) · [Commercial License — from €300/yr](./COMMERCIAL.md) (vendor contract, SLA, indemnification)
 
 ## Quick Start

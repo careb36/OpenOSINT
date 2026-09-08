@@ -130,17 +130,27 @@ in a future PR when the full Shodan output schema is confirmed stable (YAGNI).
 
 ```python
 def _format_step_output(tool_name: str, output: str) -> str:
-    if tool_name == "search_whois":    return _format_whois(output)
-    if tool_name == "search_dns":      return _format_dns(output)
-    if tool_name == "generate_dorks":  return _format_dorks(output)
-    if tool_name == "search_domain":   return _format_subdomains(output)
-    if tool_name == "search_footprint":return _format_footprint(output)
-    if tool_name == "search_ip":       return _format_ip_info(output)
-    if tool_name == "search_virustotal":return _format_virustotal(output)
-    if tool_name == "search_paste":    return _format_paste(output)
-    if tool_name == "search_username": return _format_username(output)
-    if tool_name == "search_email":    return _format_holehe(output)
-    return f"```\n{output.strip()}\n```"   # covers search_shodan + any future tools
+    if tool_name == "search_whois":
+        return _format_whois(output)
+    if tool_name == "search_dns":
+        return _format_dns(output)
+    if tool_name == "generate_dorks":
+        return _format_dorks(output)
+    if tool_name == "search_domain":
+        return _format_subdomains(output)
+    if tool_name == "search_footprint":
+        return _format_footprint(output)
+    if tool_name == "search_ip":
+        return _format_ip_info(output)
+    if tool_name == "search_virustotal":
+        return _format_virustotal(output)
+    if tool_name == "search_paste":
+        return _format_paste(output)
+    if tool_name == "search_username":
+        return _format_username(output)
+    if tool_name == "search_email":
+        return _format_holehe(output)
+    return f"```\n{output.strip()}\n```"  # covers search_shodan + any future tools
 ```
 
 #### C. Extended `_build_summary` entity counts
@@ -162,9 +172,7 @@ if ip_asns:
     lines.append(f"- **ASNs identified:** {ip_asns}")
 
 # Hostnames from Shodan
-shodan_hostnames = len(
-    tool_entities.get("search_shodan", {}).get(EntityType.DOMAIN, set())
-)
+shodan_hostnames = len(tool_entities.get("search_shodan", {}).get(EntityType.DOMAIN, set()))
 if shodan_hostnames:
     lines.append(f"- **Hostnames from Shodan:** {shodan_hostnames}")
 
@@ -212,14 +220,9 @@ _PASTE_OUTPUT = (
     "[+] https://pastebin.com/def456 (2024-02-20)\n"
 )
 _USER_OUTPUT = (
-    "[+] Twitter: https://twitter.com/johndoe99\n"
-    "[+] GitHub: https://github.com/johndoe99\n"
+    "[+] Twitter: https://twitter.com/johndoe99\n[+] GitHub: https://github.com/johndoe99\n"
 )
-_HOLEHE_OUTPUT = (
-    "[+] twitter.com\n"
-    "[+] github.com\n"
-    "[-] facebook.com\n"
-)
+_HOLEHE_OUTPUT = "[+] twitter.com\n[+] github.com\n[-] facebook.com\n"
 ```
 
 **`TestIPPlaybook` (5 tests):**

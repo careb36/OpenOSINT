@@ -46,8 +46,7 @@ def load_recipe(name_or_path: str) -> Recipe:
 
     if not path.exists():
         raise ValueError(
-            f"Recipe not found: '{name_or_path}'. "
-            f"Built-in recipes are in {_RECIPES_DIR}."
+            f"Recipe not found: '{name_or_path}'. Built-in recipes are in {_RECIPES_DIR}."
         )
 
     with path.open(encoding="utf-8") as fh:
@@ -80,9 +79,7 @@ def _validate(raw: object, path: Path) -> Recipe:
         for field in ("id", "tool", "section"):
             value = step.get(field)
             if not isinstance(value, str) or not value.strip():
-                raise ValueError(
-                    f"{path}: step {i} — '{field}' must be a non-empty string."
-                )
+                raise ValueError(f"{path}: step {i} — '{field}' must be a non-empty string.")
         sid = step["id"]
         if sid in seen_ids:
             raise ValueError(f"{path}: duplicate step id '{sid}'.")

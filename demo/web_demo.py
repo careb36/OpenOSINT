@@ -151,9 +151,14 @@ def seed_store(demo_dir: Path) -> str:
 def start_server(db_path: Path) -> subprocess.Popen:
     env = {**os.environ, "OPENOSINT_GRAPH_DB": str(db_path)}
     proc = subprocess.Popen(
-        [sys.executable, "-c",
-         f"from openosint.web_server import run_server; run_server(port={PORT})"],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        [
+            sys.executable,
+            "-c",
+            f"from openosint.web_server import run_server; run_server(port={PORT})",
+        ],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     deadline = time.time() + 15
     while time.time() < deadline:
@@ -190,23 +195,30 @@ class Cursor:
 
 
 def node_pixel(page, entity_id: str) -> tuple[float, float]:
-    return tuple(page.evaluate(
-        """(id) => {
+    return tuple(
+        page.evaluate(
+            """(id) => {
           const cy = window.__cy;
           const p = cy.getElementById(id).renderedPosition();
           const r = cy.container().getBoundingClientRect();
           return [r.left + p.x, r.top + p.y];
-        }""", entity_id))
+        }""",
+            entity_id,
+        )
+    )
 
 
 def edge_pixel(page) -> tuple[float, float]:
-    return tuple(page.evaluate(
-        """() => {
+    return tuple(
+        page.evaluate(
+            """() => {
           const cy = window.__cy;
           const p = cy.edges("[kind='same_as']").first().renderedMidpoint();
           const r = cy.container().getBoundingClientRect();
           return [r.left + p.x, r.top + p.y];
-        }"""))
+        }"""
+        )
+    )
 
 
 def record(root_id: str, video_dir: Path) -> tuple[Path, float]:
@@ -222,7 +234,8 @@ def record(root_id: str, video_dir: Path) -> tuple[Path, float]:
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         context = browser.new_context(
-            viewport=VIEWPORT, record_video_dir=str(video_dir),
+            viewport=VIEWPORT,
+            record_video_dir=str(video_dir),
             record_video_size=VIEWPORT,
         )
         page = context.new_page()
@@ -252,8 +265,7 @@ def record(root_id: str, video_dir: Path) -> tuple[Path, float]:
         # --- Shot 4: Accept -> graph re-renders: cluster + solid edge ---
         cursor.click_element("#rv-accept")
         page.wait_for_selector("#rv-undo", state="visible")
-        page.wait_for_function(
-            "() => window.__cy.edges(\"[judgement='positive']\").length > 0")
+        page.wait_for_function("() => window.__cy.edges(\"[judgement='positive']\").length > 0")
         page.wait_for_timeout(2500)
 
         # --- Shot 5: close review -> full-width merged graph, hold ---
@@ -270,8 +282,11 @@ def record(root_id: str, video_dir: Path) -> tuple[Path, float]:
 
 def video_duration(src: Path) -> float:
     out = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "csv=p=0", str(src)], check=True, capture_output=True, text=True)
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(src)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     return float(out.stdout.strip())
 
 
@@ -286,20 +301,49 @@ def convert(src: Path, tail: float) -> None:
     """
     trim = max(0.0, video_duration(src) - tail)
     palette = src.parent / "palette.png"
-    filters = (f"fps={GIF_FPS},scale={GIF_WIDTH}:-1:flags=lanczos,"
-               "mpdecimate=hi=1024:lo=256:frac=0.05,"
-               "tpad=stop_duration=2.5:stop_mode=clone")
+    filters = (
+        f"fps={GIF_FPS},scale={GIF_WIDTH}:-1:flags=lanczos,"
+        "mpdecimate=hi=1024:lo=256:frac=0.05,"
+        "tpad=stop_duration=2.5:stop_mode=clone"
+    )
 
     def run(*args: str) -> None:
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *args], check=True)
 
-    run("-ss", f"{trim:.2f}", "-i", str(src),
-        "-vf", f"{filters},palettegen=stats_mode=diff", str(palette))
-    run("-ss", f"{trim:.2f}", "-i", str(src), "-i", str(palette),
-        "-lavfi", f"{filters} [x]; [x][1:v] paletteuse=dither=none",
-        str(OUT_GIF))
-    run("-ss", f"{trim:.2f}", "-i", str(src),
-        "-c:v", "libvpx-vp9", "-crf", "40", "-b:v", "0", "-an", str(OUT_WEBM))
+    run(
+        "-ss",
+        f"{trim:.2f}",
+        "-i",
+        str(src),
+        "-vf",
+        f"{filters},palettegen=stats_mode=diff",
+        str(palette),
+    )
+    run(
+        "-ss",
+        f"{trim:.2f}",
+        "-i",
+        str(src),
+        "-i",
+        str(palette),
+        "-lavfi",
+        f"{filters} [x]; [x][1:v] paletteuse=dither=none",
+        str(OUT_GIF),
+    )
+    run(
+        "-ss",
+        f"{trim:.2f}",
+        "-i",
+        str(src),
+        "-c:v",
+        "libvpx-vp9",
+        "-crf",
+        "40",
+        "-b:v",
+        "0",
+        "-an",
+        str(OUT_WEBM),
+    )
 
 
 def main() -> None:

@@ -94,6 +94,9 @@ graph-dedup = [
     "nomenklatura>=4.14.0; python_version>='3.11'",
 ]
 stix = [
+    # openosint.graph.export.stix import path traverses openosint.graph.__init__
+    # which imports FollowTheMoney-backed graph modules.
+    "followthemoney>=4.10.0",
     "stix2>=3.0.0",
 ]
 web = [
@@ -115,6 +118,8 @@ all = [
     "sse-starlette>=1.8.0",
     "PySocks>=1.7.1",
     "aiohttp-socks>=0.8.4",
+    "stix2>=3.0.0",
+    "followthemoney>=4.10.0",
 ]
 
 [tool.setuptools.packages.find]

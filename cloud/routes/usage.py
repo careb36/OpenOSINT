@@ -1,4 +1,5 @@
 """GET /v1/usage — return the caller's remaining credits and plan."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends

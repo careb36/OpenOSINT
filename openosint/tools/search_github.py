@@ -127,7 +127,9 @@ def _format_profile(user: dict, repos: list[dict], emails: set[str]) -> str:
     return "\n".join(lines)
 
 
-async def run_github_osint(query: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None) -> str:
+async def run_github_osint(
+    query: str, timeout_seconds: int = _DEFAULT_TIMEOUT, *, api_key: str | None = None
+) -> str:
     """Search GitHub for a username, email, or keyword. GITHUB_TOKEN increases rate limits."""
     query = query.strip()
     if not query:

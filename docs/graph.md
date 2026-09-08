@@ -223,27 +223,29 @@ NOW = datetime.now(timezone.utc)
 
 
 def profile(login, name, email):
-    return (
-        f"[GitHub] Login: {login}\n"
-        f"[GitHub] Name: {name}\n"
-        f"[GitHub] Email (profile): {email}\n"
-    )
+    return f"[GitHub] Login: {login}\n[GitHub] Name: {name}\n[GitHub] Email (profile): {email}\n"
 
 
 store = GraphStore("graph_demo.db")  # created on first use; ~/.openosint/graph.db
-                                      # is the MCP tools' own default path
+# is the MCP tools' own default path
 
 # Two accounts, same person, discovered under different usernames.
-store.append(map_github(
-    profile("janedoe1", "Jane Doe", "jane@example.com"),
-    make_entity(EntityType.USERNAME, "janedoe1", 1.0),
-    run_id="scan-1", collected_at=NOW,
-))
-store.append(map_github(
-    profile("jdoe_dev", "Jane Doe", "jane@example.com"),
-    make_entity(EntityType.USERNAME, "jdoe_dev", 1.0),
-    run_id="scan-2", collected_at=NOW,
-))
+store.append(
+    map_github(
+        profile("janedoe1", "Jane Doe", "jane@example.com"),
+        make_entity(EntityType.USERNAME, "janedoe1", 1.0),
+        run_id="scan-1",
+        collected_at=NOW,
+    )
+)
+store.append(
+    map_github(
+        profile("jdoe_dev", "Jane Doe", "jane@example.com"),
+        make_entity(EntityType.USERNAME, "jdoe_dev", 1.0),
+        run_id="scan-2",
+        collected_at=NOW,
+    )
+)
 
 # Score every candidate pair; suggest matches as judgement='unsure'.
 suggested = run_crossref(store, run_id="crossref-1", decided_at=NOW, min_threshold=0.3)

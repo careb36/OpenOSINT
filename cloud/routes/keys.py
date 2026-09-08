@@ -1,4 +1,5 @@
 """POST /v1/keys, GET /v1/keys, DELETE /v1/keys/{provider}."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,8 +21,7 @@ router = APIRouter()
 _CUSTOMER_PROVIDERS: frozenset[str] = frozenset(
     cfg.provider
     for cfg in TOOL_KEY_CONFIG.values()
-    if cfg.provider is not None
-    and cfg.source in (KeySource.tenant, KeySource.tenant_optional)
+    if cfg.provider is not None and cfg.source in (KeySource.tenant, KeySource.tenant_optional)
 )
 
 

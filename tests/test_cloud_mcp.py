@@ -14,6 +14,7 @@ Coverage:
   (g) upstream tool error does not decrement credits
   (h) auth middleware extracts Bearer token and sets _customer_ctx correctly
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -311,7 +312,9 @@ async def test_shodan_attribution_reaches_mcp_text_result():
     customer = _seed("key-mcp-shodan-attr", credits=10)
 
     with patch.dict("cloud.tools.ALLOW_LIST", {"search_shodan": _SHODAN_ENTRY}):
-        with patch("cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")):
+        with patch(
+            "cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")
+        ):
             with patch.dict(os.environ, {"SHODAN_API_KEY": "srv_shodan_key"}):
                 async with _as_customer(customer):
                     result = await _run_mcp_tool("search_shodan", "1.2.3.4")

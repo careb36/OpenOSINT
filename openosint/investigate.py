@@ -60,7 +60,7 @@ pivot.py's _run_tool_safe).  Raises ``ValueError`` only on bad arguments
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
 
@@ -168,8 +168,10 @@ class InvestigationBudget:
 async def investigate(
     target: str,
     *,
-    kind: EntityKind | Literal["auto", "email", "username", "domain", "ip",
-                                "phone", "hash", "url", "person"] = EntityKind.AUTO,
+    kind: EntityKind
+    | Literal[
+        "auto", "email", "username", "domain", "ip", "phone", "hash", "url", "person"
+    ] = EntityKind.AUTO,
     budget: InvestigationBudget | None = None,
     run_id: str = "",
 ) -> "openosint.correlation.EntityGraph":  # noqa: F821 — forward ref, not imported at module level
@@ -213,9 +215,7 @@ async def investigate(
             kind = EntityKind(kind.lower())
         except ValueError:
             valid = [e.value for e in EntityKind]
-            raise ValueError(
-                f"Unknown kind {kind!r}. Valid values: {valid}"
-            )
+            raise ValueError(f"Unknown kind {kind!r}. Valid values: {valid}")
 
     if budget is None:
         budget = InvestigationBudget.default()
@@ -236,7 +236,7 @@ async def investigate(
         )
     else:
         # Build a typed seed entity and let the BFS take it from there
-        from openosint.correlation import EntityType, make_entity
+        from openosint.correlation import EntityType
 
         entity_type_str = _KIND_TO_ENTITY_TYPE_STR[kind]
         entity_type = EntityType(entity_type_str)
@@ -271,15 +271,15 @@ async def _investigate_typed(
     differently (e.g. a username that looks like an email prefix).
     """
     import asyncio
+    from collections import deque
 
-    from openosint.correlation import EntityGraph, EntityType, Relationship, make_entity
+    from openosint.correlation import EntityGraph, Relationship, make_entity
     from openosint.extractors import EXTRACTOR_REGISTRY
     from openosint.pivot import (
         _PIVOT_MIN_CONFIDENCE,
         _get_routable_tools,
         _run_tool_safe,
     )
-    from collections import deque
 
     graph = EntityGraph()
     seed_entity = make_entity(entity_type, target.strip(), 1.0)

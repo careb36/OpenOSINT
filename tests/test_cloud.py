@@ -16,6 +16,7 @@ Coverage:
   (i) upstream error leaves credits unchanged
   (j) allow-list is exactly the 5 infrastructure tools; removed tools return 400
 """
+
 from __future__ import annotations
 
 import os
@@ -26,6 +27,7 @@ from httpx import ASGITransport, AsyncClient
 
 from cloud import db, keys
 from cloud.main import create_app
+from cloud.tools import ALLOW_LIST as _ALLOW_LIST
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,7 @@ def reset_memory_store():
     db._MEMORY_USERS_BY_IDENTITY.clear()
     db._next_user_id = 1
     keys._MEMORY_KEYS.clear()
+    # enrich_routes no longer uses a mutable _LOG_IDS dict; no reset needed
     # Reset cached Fernet so tests always get a fresh ephemeral key
     keys._fernet = None
     yield
@@ -458,11 +461,14 @@ async def test_platform_pool_upstream_error_charges_zero_credits(client):
 
 # ── (j) allow-list shape and removed-tool 400s ───────────────────────────────
 
-from cloud.tools import ALLOW_LIST as _ALLOW_LIST
-
 _EXPECTED_TOOLS = {
-    "search_ip", "search_ip2location", "search_abuseipdb", "search_dns", "search_domain",
-    "search_virustotal", "search_censys",
+    "search_ip",
+    "search_ip2location",
+    "search_abuseipdb",
+    "search_dns",
+    "search_domain",
+    "search_virustotal",
+    "search_censys",
 }
 
 
@@ -513,7 +519,9 @@ async def test_dispatch_appends_shodan_attribution():
     # test_shodan_costs_configured_credit_amount) — reinject it so dispatch()
     # still runs the real attribution-appending path.
     with patch.dict("cloud.tools.ALLOW_LIST", {"search_shodan": cloud_tools._SHODAN_ENTRY}):
-        with patch("cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")):
+        with patch(
+            "cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")
+        ):
             result = await cloud_tools.dispatch("search_shodan", "1.2.3.4", api_key="k")
 
     assert result["results"][-1] == "Data provided by Shodan (shodan.io)."
@@ -539,7 +547,9 @@ async def test_shodan_attribution_reaches_rest_response_body(client):
     # search_shodan is deliberately absent from ALLOW_LIST — reinject it (see
     # test_shodan_costs_configured_credit_amount).
     with patch.dict("cloud.tools.ALLOW_LIST", {"search_shodan": _SHODAN_ENTRY}):
-        with patch("cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")):
+        with patch(
+            "cloud.tools.run_shodan_osint", new=AsyncMock(return_value="[Shodan] Host: 1.2.3.4")
+        ):
             with patch.dict(os.environ, {"SHODAN_API_KEY": "srv_shodan_key"}):
                 resp = await client.post(
                     "/v1/enrich",
@@ -655,8 +665,9 @@ async def test_enrich_end_to_end_logs_no_target_value(client, caplog):
     contains the tool name and outcome status, but never the target."""
     import logging
 
-    _seed("key-log-proof", credits=5)
-    await keys.store_key("key-log-proof", "ipinfo", "tok_test_byok")
+    customer_api_key = "key-log-proof"
+    _seed(customer_api_key, credits=5)
+    await keys.store_key(customer_api_key, "ipinfo", "tok_test_byok")
     sentinel_ip = "203.0.113.77"  # TEST-NET-3 (RFC 5737) — reserved, not a real host
 
     fake_response = type(
@@ -672,11 +683,12 @@ async def test_enrich_end_to_end_logs_no_target_value(client, caplog):
         resp = await client.post(
             "/v1/enrich",
             json={"tool": "search_ip", "target": sentinel_ip},
-            headers={"X-API-Key": "key-log-proof"},
+            headers={"X-API-Key": customer_api_key},
         )
 
     assert resp.status_code == 200
     assert sentinel_ip not in caplog.text, "target value leaked into Cloud's captured logs"
+    assert customer_api_key not in caplog.text, "API key leaked into Cloud's captured logs"
     assert "tool=search_ip" in caplog.text
     assert "status=ok" in caplog.text
 

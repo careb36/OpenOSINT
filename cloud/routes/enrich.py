@@ -1,8 +1,11 @@
 """POST /v1/enrich — run an OSINT tool against a target."""
+
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
+import os
 import time
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,21 +27,28 @@ router = APIRouter()
 
 _ERROR_PREFIXES = ("Scan error", "Internal error", "Error:")
 _CONTACT_MESSAGE = "No credits remaining. Contact commercial@openosint.tech for access."
+_LOG_ID_SALT: bytes = os.urandom(32)
 
 
-def _log_id(api_key: str) -> str:
-    """A customer identifier safe to log: never the full key, never the
-    target. Enough to correlate requests in support/incident review, not
-    enough to reconstruct the credential."""
-    return f"...{api_key[-4:]}" if len(api_key) > 4 else "***"
+def _customer_log_id(api_key: str) -> str:
+    """Return a process-local pseudonymous identifier for request logging.
+
+    Uses PBKDF2-HMAC-SHA256 with a random per-process salt so raw API keys are
+    never retained in memory and the mapping cannot be reversed.
+    """
+    digest = hashlib.pbkdf2_hmac("sha256", api_key.encode(), _LOG_ID_SALT, 1).hex()[:12]
+    return f"customer-{digest}"
 
 
-def _log_outcome(tool: str, api_key: str, status: str, elapsed: float) -> None:
+def _log_outcome(tool: str, customer_log_id: str, status: str, elapsed: float) -> None:
     """The only per-request line Cloud logs: identifier, tool name, outcome
     status, and timing. Never the target, never a provider response body."""
     logger.info(
         "enrich: customer=%s tool=%s status=%s elapsed=%.2fs",
-        _log_id(api_key), tool, status, elapsed,
+        customer_log_id,
+        tool,
+        status,
+        elapsed,
     )
 
 
@@ -66,8 +76,7 @@ async def enrich(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"Tool '{body.tool}' is not available in v1.  "
-                f"Available: {sorted(tools.ALLOW_LIST)}"
+                f"Tool '{body.tool}' is not available in v1.  Available: {sorted(tools.ALLOW_LIST)}"
             ),
         )
 
@@ -87,6 +96,7 @@ async def enrich(
         )
 
     cost = get_credit_cost(body.tool)
+    customer_log_id = _customer_log_id(customer.api_key)
 
     # 402 — fast pre-check (avoids a DB round-trip for obviously empty accounts)
     if customer.credits < cost:
@@ -100,7 +110,7 @@ async def enrich(
             timeout=float(TOOL_TIMEOUT_SECONDS),
         )
     except asyncio.TimeoutError:
-        _log_outcome(body.tool, customer.api_key, "timeout", time.monotonic() - start)
+        _log_outcome(body.tool, customer_log_id, "timeout", time.monotonic() - start)
         raise HTTPException(
             status_code=504,
             detail=f"Tool '{body.tool}' exceeded the {TOOL_TIMEOUT_SECONDS} s timeout",
@@ -110,7 +120,7 @@ async def enrich(
     # No charge when the tool returned an upstream error
     first_line = result["results"][0] if result["results"] else (result.get("error") or "")
     if any(first_line.startswith(p) for p in _ERROR_PREFIXES):
-        _log_outcome(body.tool, customer.api_key, "upstream_error", elapsed)
+        _log_outcome(body.tool, customer_log_id, "upstream_error", elapsed)
         return EnrichResponse(
             tool=result["tool"],
             target=result["target"],
@@ -124,10 +134,10 @@ async def enrich(
     new_credits = await db.decrement_credits(customer.api_key, cost)
     if new_credits is None:
         # Race: a concurrent request drained the last credit between pre-check and now
-        _log_outcome(body.tool, customer.api_key, "credits_exhausted", elapsed)
+        _log_outcome(body.tool, customer_log_id, "credits_exhausted", elapsed)
         _raise_402(customer.plan)
 
-    _log_outcome(body.tool, customer.api_key, "ok", elapsed)
+    _log_outcome(body.tool, customer_log_id, "ok", elapsed)
     return EnrichResponse(
         tool=result["tool"],
         target=result["target"],
