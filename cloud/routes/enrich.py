@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import logging
 import time
 
@@ -26,11 +25,16 @@ router = APIRouter()
 
 _ERROR_PREFIXES = ("Scan error", "Internal error", "Error:")
 _CONTACT_MESSAGE = "No credits remaining. Contact commercial@openosint.tech for access."
+_LOG_IDS: dict[str, str] = {}
 
 
 def _customer_log_id(api_key: str) -> str:
-    """Return a stable, non-reversible identifier for request logging."""
-    return hashlib.blake2s(api_key.encode("utf-8"), digest_size=8).hexdigest()
+    """Return a process-local pseudonymous identifier for request logging."""
+    customer_log_id = _LOG_IDS.get(api_key)
+    if customer_log_id is None:
+        customer_log_id = f"customer-{len(_LOG_IDS) + 1}"
+        _LOG_IDS[api_key] = customer_log_id
+    return customer_log_id
 
 
 def _log_outcome(tool: str, customer_log_id: str, status: str, elapsed: float) -> None:
