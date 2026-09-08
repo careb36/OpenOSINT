@@ -33,10 +33,10 @@ _LOG_ID_SALT: bytes = os.urandom(32)
 def _customer_log_id(api_key: str) -> str:
     """Return a process-local pseudonymous identifier for request logging.
 
-    Uses a keyed BLAKE2b digest with a random per-process salt so raw API keys
-    are never retained in memory and the mapping cannot be reversed.
+    Uses PBKDF2-HMAC-SHA256 with a random per-process salt so raw API keys are
+    never retained in memory and the mapping cannot be reversed.
     """
-    digest = hashlib.blake2b(api_key.encode(), key=_LOG_ID_SALT, digest_size=6).hexdigest()
+    digest = hashlib.pbkdf2_hmac("sha256", api_key.encode(), _LOG_ID_SALT, 1).hex()[:12]
     return f"customer-{digest}"
 
 
