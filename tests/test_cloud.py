@@ -664,8 +664,9 @@ async def test_enrich_end_to_end_logs_no_target_value(client, caplog):
     contains the tool name and outcome status, but never the target."""
     import logging
 
-    _seed("key-log-proof", credits=5)
-    await keys.store_key("key-log-proof", "ipinfo", "tok_test_byok")
+    customer_api_key = "key-log-proof"
+    _seed(customer_api_key, credits=5)
+    await keys.store_key(customer_api_key, "ipinfo", "tok_test_byok")
     sentinel_ip = "203.0.113.77"  # TEST-NET-3 (RFC 5737) — reserved, not a real host
 
     fake_response = type(
@@ -681,11 +682,12 @@ async def test_enrich_end_to_end_logs_no_target_value(client, caplog):
         resp = await client.post(
             "/v1/enrich",
             json={"tool": "search_ip", "target": sentinel_ip},
-            headers={"X-API-Key": "key-log-proof"},
+            headers={"X-API-Key": customer_api_key},
         )
 
     assert resp.status_code == 200
     assert sentinel_ip not in caplog.text, "target value leaked into Cloud's captured logs"
+    assert customer_api_key not in caplog.text, "API key leaked into Cloud's captured logs"
     assert "tool=search_ip" in caplog.text
     assert "status=ok" in caplog.text
 

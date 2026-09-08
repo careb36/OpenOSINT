@@ -24,7 +24,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from cloud import db, rate_limit, tools
 from cloud.config import TOOL_TIMEOUT_SECONDS
 from cloud.key_sources import get_credit_cost, is_platform_pool_tool, resolve_key
-from cloud.routes.enrich import _log_outcome
+from cloud.routes.enrich import _customer_log_id, _log_outcome
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ async def _run_mcp_tool(tool_name: str, target: str) -> str:
         return f"Error: Too many '{tool_name}' requests. Please slow down and try again shortly."
 
     cost = get_credit_cost(tool_name)
+    customer_log_id = _customer_log_id(customer.api_key)
     if customer.credits < cost:
         return _credits_error(customer.plan)
 
@@ -83,10 +84,10 @@ async def _run_mcp_tool(tool_name: str, target: str) -> str:
             timeout=float(TOOL_TIMEOUT_SECONDS),
         )
     except asyncio.TimeoutError:
-        _log_outcome(tool_name, customer.api_key, "timeout", time.monotonic() - start)
+        _log_outcome(tool_name, customer_log_id, "timeout", time.monotonic() - start)
         return f"Error: Tool '{tool_name}' timed out after {TOOL_TIMEOUT_SECONDS}s."
     except ValueError as exc:
-        _log_outcome(tool_name, customer.api_key, "error", time.monotonic() - start)
+        _log_outcome(tool_name, customer_log_id, "error", time.monotonic() - start)
         return f"Error: {exc}"
     elapsed = time.monotonic() - start
 
@@ -98,11 +99,11 @@ async def _run_mcp_tool(tool_name: str, target: str) -> str:
         new_credits = await db.decrement_credits(customer.api_key, cost)
         if new_credits is None:
             # Race condition: concurrent request drained the last credit
-            _log_outcome(tool_name, customer.api_key, "credits_exhausted", elapsed)
+            _log_outcome(tool_name, customer_log_id, "credits_exhausted", elapsed)
             return _credits_error(customer.plan)
-        _log_outcome(tool_name, customer.api_key, "ok", elapsed)
+        _log_outcome(tool_name, customer_log_id, "ok", elapsed)
     else:
-        _log_outcome(tool_name, customer.api_key, "upstream_error", elapsed)
+        _log_outcome(tool_name, customer_log_id, "upstream_error", elapsed)
 
     return "\n".join(lines) if lines else (result.get("error") or "No results.")
 
