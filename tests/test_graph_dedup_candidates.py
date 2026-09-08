@@ -40,6 +40,15 @@ class TestSameSchemaPairs:
         assert MATCHABLE_SCHEMAS == {"Person", "LegalEntity", "Organization", "UserAccount"}
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=NotImplementedError,
+    reason=(
+        "block_candidates() is a deliberate Phase 3 stub — see the docstring in "
+        "openosint/graph/dedup/candidates.py for the implementation contract. "
+        "strict=True forces this marker off once the stub is implemented."
+    ),
+)
 class TestBlockCandidates:
     """The Phase 3 stub — see openosint/graph/dedup/candidates.py for the full contract."""
 
